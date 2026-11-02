@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  body{margin:0;width:320px;background:#161920;color:#e8e9ec;font:14px "Segoe UI",system-ui,sans-serif}
+  header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #2a2f3a;font-weight:700;font-size:16px}
+  header img{width:24px;height:24px}
+  main{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .st{display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#6b717c;flex:none}
+  .ok .dot{background:#3dbb7a}.off .dot{background:#e5a00d}
+  .box{background:#1d2129;border-radius:10px;padding:10px 12px;line-height:1.45}
+  .dim{color:#9aa0ab;font-size:12.5px}
+  button{font:inherit;border:0;border-radius:8px;padding:9px 12px;background:#e5a00d;color:#16120a;font-weight:600;cursor:pointer}
+  button.sec{background:#1d2129;color:#e8e9ec;border:1px solid #2a2f3a;font-weight:400}
+  ul{margin:4px 0 0;padding-left:18px}
+</style>
+</head>
+<body>
+<header><img src="icone32.png" alt="">Estante · Leitura</header>
+<main>
+  <div class="st" id="st"><span class="dot"></span><span id="stTxt">Verificando…</span></div>
+  <div class="box" id="pagina"><b>Esta página</b><div id="paginaTxt" class="dim" style="margin-top:4px">Olhando…</div>
+    <button class="sec" id="copiar" style="margin-top:8px;padding:6px 10px;font-size:12.5px;display:none">Copiar detalhes para avisar</button></div>
+  <div class="box" id="ultimo"></div>
+  <div id="faltando"></div>
+  <div class="box">
+    <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="optModo"> <span>Modo leitura nos sites: esconde menus e anúncios e mostra a barra da Estante</span></label>
+    <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;margin-top:8px"><input type="checkbox" id="optAuto"> <span>No fim do capítulo, ir sozinho para o próximo</span></label>
+    <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;margin-top:8px"><input type="checkbox" id="optAvisos"> <span>Avisar no Windows quando sair capítulo novo de uma série que estou lendo</span></label>
+  </div>
+  <div class="box dim" id="avisados" style="display:none"></div>
+  <button id="procurar">Procurar capítulos novos agora</button>
+  <div class="dim" id="sites"></div>
+  <button class="sec" id="atualizar">Atualizar lista de sites</button>
+</main>
+<script src="popup.js"></script>
+</body>
+</html>

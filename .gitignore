@@ -1,0 +1,10 @@
+# só o código vai para o GitHub: nada de dados de ninguém nem do plano de trabalho
+PARA-O-CLAUDE-CODE.txt
+CLAUDE.md
+dist/
+__pycache__/
+*.pyc
+.ruff_cache/
+# a pasta de dados, se alguém rodar com ESTANTE_DATA apontando para cá
+dados/
+*.acesso
