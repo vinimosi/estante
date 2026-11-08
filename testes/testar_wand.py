@@ -207,7 +207,7 @@ with sync_playwright() as p:
     pg.evaluate("localStorage.setItem('estante.estante', JSON.stringify('jogos'))")
     pg.reload()
     pg.wait_for_selector(".card")
-    check(pg.locator(".grid .card .wandtag").count() == 2, "dois cartões com o selo ✦ Wand")
+    check(pg.locator(".grid .card .wandtag").count() == 2, "dois cartões com o selo Wand")
     pg.screenshot(path=str(S / "wand_biblioteca.png"))
     pg.click("text=Com trainer (Wand)")
     check(pg.locator(".grid .card").count() == 2, "filtro Com trainer (Wand) na barra lateral")

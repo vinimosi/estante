@@ -81,7 +81,7 @@ with sync_playwright() as p:
     pg.click(".nav >> text=Todos os jogos")
     pg.click(".card:has-text('Forza') .meta")
     pg.wait_for_timeout(500)
-    pg.click("text=✎ Editar")
+    pg.click("#drawer .toggles >> text=Editar")
     pg.wait_for_timeout(300)
     pg.screenshot(path=str(OUT / "8_editar_loja.png"))
     pg.keyboard.press("Escape")

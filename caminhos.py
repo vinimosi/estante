@@ -8,7 +8,7 @@ import threading
 import time
 from pathlib import Path
 
-VERSAO = "2.0.0"  # versão da Estante, mostrada na aba Geral; a atualização automática compara com ela
+VERSAO = "2.1.0"  # versão da Estante, mostrada na aba Geral; a atualização automática compara com ela
 REPOSITORIO = "vinimosi/estante"  # no GitHub: de onde vêm as versões novas
 BASE = Path(__file__).resolve().parent
 NOME_PASTA = "Estante"              # %APPDATA%\Estante

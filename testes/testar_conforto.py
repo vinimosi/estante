@@ -262,7 +262,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(1200)
     pg.evaluate(f"openDrawer('{g1['id']}')")
     pg.wait_for_selector("#drawer .sessoes li")
-    check(pg.locator("#drawer .sessoes li").count() == 2 and "Nos últimos 7 dias" in pg.inner_text("#drawer"),
+    check(pg.locator("#drawer .sessoes li").count() == 2 and "nos últimos 7 dias" in pg.inner_text("#drawer").lower(),
           "o painel do jogo mostra as últimas vezes jogadas e o tempo da semana")
     pg.screenshot(path=str(OUT / "conforto_sessoes.png"))
     check(not erros, "sem erros na página: " + "; ".join(erros))

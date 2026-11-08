@@ -55,7 +55,7 @@ def zip_versao(v, extra=None):
     return b.getvalue()
 
 
-GITHUB = {"tag": "v2.1.0", "zip": zip_versao("2.1.0"), "digest": True}
+GITHUB = {"tag": "v99.0.0", "zip": zip_versao("99.0.0"), "digest": True}
 
 
 def api_falsa(url):
@@ -81,12 +81,12 @@ print("Versão nova no GitHub")
 check(atu.versao_tupla("v2.10.1") > atu.versao_tupla("2.9.9") > atu.versao_tupla("2.0.0") and atu.versao_tupla("2.0") < atu.versao_tupla("2.0.1"),
       "as versões são comparadas como números (2.10 é depois de 2.9)")
 r = c.post("/api/atualizacao/verificar").get_json()
-check(r["nova"]["versao"] == "2.1.0" and r["nova"]["url"] == "https://exemplo/nova.zip" and r["versao"] == atu.VERSAO,
-      "achou a 2.1.0 e o arquivo certo (o zip, não o instalador)")
+check(r["nova"]["versao"] == "99.0.0" and r["nova"]["url"] == "https://exemplo/nova.zip" and r["versao"] == atu.VERSAO,
+      "achou a 99.0.0 e o arquivo certo (o zip, não o instalador)")
 check(app.get_cfg()["atualizacao"]["ultima"] > time.time() - 5, "anota quando olhou (para olhar de novo só no dia seguinte)")
 GITHUB["tag"] = "v" + atu.VERSAO
 check(c.post("/api/atualizacao/verificar").get_json()["nova"] is None, "a mesma versão que você tem não conta como nova")
-GITHUB["tag"] = "v2.1.0"
+GITHUB["tag"] = "v99.0.0"
 c.post("/api/atualizacao/verificar")
 r = c.post("/api/atualizacao/instalar")
 check(r.status_code == 400 and "código-fonte" in r.get_json()["error"], "rodando pelo código-fonte, não troca nada sozinha")
@@ -110,13 +110,13 @@ try:
     check(False, "arquivo que não confere com o publicado")
 except ValueError as e:
     check("não confere" in str(e), "arquivo que não confere com o publicado é recusado")
-GITHUB["zip"] = zip_versao("2.1.0", {"../fora.txt": "x"})
+GITHUB["zip"] = zip_versao("99.0.0", {"../fora.txt": "x"})
 try:
     atu.preparar(dict(nova, tamanho=len(GITHUB["zip"]), sha256=""))
     check(False, "zip com caminho para fora")
 except ValueError:
     check(not (inst / "fora.txt").exists(), "zip com algo fora do lugar é recusado, sem escrever nada fora")
-GITHUB["zip"] = zip_versao("2.1.0")
+GITHUB["zip"] = zip_versao("99.0.0")
 
 print("Esperar o jogo fechar")
 abertos, trocou, saiu = {"n": 2}, [], []
@@ -165,13 +165,13 @@ with sync_playwright() as p:
     pg.goto("http://127.0.0.1:8787/")
     pg.wait_for_selector("#avisoAtu.show")
     t = pg.inner_text("#avisoAtu")
-    check("2.1.0" in t and "Ver no GitHub" in t, "aviso no alto: saiu a versão nova (pelo código-fonte, o botão leva ao GitHub)")
+    check("99.0.0" in t and "Ver no GitHub" in t, "aviso no alto: saiu a versão nova (pelo código-fonte, o botão leva ao GitHub)")
     pg.screenshot(path=str(OUT / "atualizar_aviso.png"))
     pg.click("#avisoAtu button:has-text('Depois')")
     check(not pg.is_visible("#avisoAtu"), "“Depois” esconde o aviso")
     pg.evaluate("openSettings('geral')")
     pg.wait_for_selector("#atuCfg #atuVer")
-    check("2.1.0" in pg.inner_text("#atuCfg") and "github.com/" + atu.REPOSITORIO in pg.inner_text("#atuCfg"),
+    check("99.0.0" in pg.inner_text("#atuCfg") and "github.com/" + atu.REPOSITORIO in pg.inner_text("#atuCfg"),
           "a aba Geral mostra a versão nova e o endereço do repositório")
     check(not erros, "sem erros na página: " + "; ".join(erros))
     b.close()

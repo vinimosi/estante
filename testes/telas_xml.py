@@ -20,6 +20,6 @@ with sync_playwright() as p:
     t = time.time(); pg.click("#shelves >> text=Leitura"); pg.wait_for_selector(".grid .card"); print("abriu em %.2fs" % (time.time() - t))
     pg.wait_for_timeout(800); pg.screenshot(path=str(S / "telas" / "x1_lista.png"))
     t = time.time(); pg.fill("#q", "demon"); pg.wait_for_timeout(100); print("busca em %.2fs" % (time.time() - t))
-    pg.fill("#q", ""); pg.click("text=＋ Adicionar"); pg.click("text=Importar sua lista"); pg.wait_for_timeout(500)
+    pg.fill("#q", ""); pg.click(".dd > .btn.primary"); pg.click("text=Importar sua lista"); pg.wait_for_timeout(500)
     pg.screenshot(path=str(S / "telas" / "x2_importar.png")); print("erros:", erros); b.close()
 srv.shutdown()

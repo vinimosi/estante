@@ -4,294 +4,442 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Estante</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23e5a00d'/><rect x='14' y='14' width='10' height='36' rx='2' fill='%23111'/><rect x='27' y='14' width='10' height='36' rx='2' fill='%23111'/><rect x='41' y='16' width='10' height='34' rx='2' fill='%23111' transform='rotate(12 46 33)'/></svg>">
+<script>try{const t=JSON.parse(localStorage.getItem('estante.tema')||'"escuro"');document.documentElement.dataset.tema=t==='sistema'?(matchMedia('(prefers-color-scheme: light)').matches?'claro':'escuro'):t;}catch(e){document.documentElement.dataset.tema='escuro';}</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23151412'/><rect x='15' y='14' width='7' height='36' fill='%23ede9e2'/><rect x='26' y='20' width='7' height='30' fill='%23ede9e2'/><rect x='40' y='13' width='7' height='38' fill='%23e8623a' transform='rotate(14 43.5 50)'/></svg>">
 <style>
+/* ============================================================
+   ESTANTE — sistema visual "Índice"
+   Um catálogo pessoal: a capa é a protagonista, o texto organiza.
+   Três vozes tipográficas, todas do próprio Windows:
+     Sitka (serifa editorial)  -> títulos, nomes de obras
+     Bahnschrift (grotesca DIN) -> rótulos, números, índices
+     Segoe UI Variable          -> texto corrido e controles
+   Um único acento: "lacre", o vermelho-alaranjado de carimbo de biblioteca.
+   ============================================================ */
 :root{
-  --bg:#0f1115; --panel:#161920; --panel2:#1d2129; --line:#2a2f3a;
-  --text:#e8e9ec; --muted:#9aa0ab; --dim:#6b717c;
-  --accent:#e5a00d; --accent2:#f5b82e; --danger:#e5484d; --ok:#3dbb7a;
-  --card:170px; --radius:10px;
-  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --f-ui:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --f-tit:"Sitka Heading","Sitka Subheading","Sitka Text","Sitka",Georgia,"Source Serif 4","Times New Roman",serif;
+  --f-rot:"Bahnschrift SemiCondensed","Bahnschrift","DIN Alternate","Barlow Semi Condensed","Arial Narrow",sans-serif;
+
+  --bg:#151412; --rail:#0f0e0d; --panel:#1b1a17; --panel2:#24221f; --panel3:#2e2c28;
+  --line:#2c2a26; --line2:#3e3b36;
+  --text:#ede9e2; --muted:#aba59b; --dim:#8b857b;
+  --accent:#e8623a; --accent2:#f2805c; --on-accent:#1a0b05; --accent-bg:rgba(232,98,58,.12);
+  --ok:#74c493; --err:#ff8c84; --warn:#f0b35e; --danger:#e5534b;
+  --sombra-capa:0 1px 0 rgba(0,0,0,.35),0 14px 26px -16px rgba(0,0,0,.9);
+  --veu:rgba(8,7,6,.62);
+  --card:170px; --radius:3px; --r:5px;
+  color-scheme:dark;
+  font-family:var(--f-ui);
+}
+:root[data-tema="claro"]{
+  --bg:#f2f0ec; --rail:#e8e5df; --panel:#faf9f6; --panel2:#e6e3dd; --panel3:#dad6cf;
+  --line:#dcd8d1; --line2:#c4bfb6;
+  --text:#1c1a17; --muted:#544f48; --dim:#69645c;
+  --accent:#b8431d; --accent2:#9f3814; --on-accent:#fff; --accent-bg:rgba(184,67,29,.09);
+  --ok:#2f7d4f; --err:#b3261e; --warn:#8a5a00; --danger:#b3261e;
+  --sombra-capa:0 1px 0 rgba(0,0,0,.08),0 12px 22px -14px rgba(40,30,20,.55);
+  --veu:rgba(20,18,15,.45);
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
-body{display:flex;overflow:hidden}
-button,input,select{font:inherit;color:inherit}
+body{display:flex;overflow:hidden;font-size:14px;-webkit-font-smoothing:antialiased;font-variant-numeric:lining-nums}
+button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-a{color:var(--accent)}
+a{color:var(--accent2)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--accent);color:var(--on-accent)}
 ::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-thumb{background:#2c313b;border-radius:10px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:10px;border:3px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+.i.cheio{fill:currentColor;stroke:none}
 
-aside{width:240px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:10px;padding:20px 18px 14px;font-weight:700;font-size:18px}
-.brand .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
-.brand .logo svg{width:20px;height:20px}
-.nav{padding:6px 10px;overflow-y:auto;flex:1}
-.nav h4{margin:18px 10px 6px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);font-weight:600;display:flex;justify-content:space-between;align-items:center}
-.nav h4 button{background:none;border:0;color:var(--dim);font-size:18px;line-height:1;padding:0 4px}
-.nav h4 button:hover{color:var(--accent)}
-.item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:none;text-align:left;color:var(--muted);font-size:14px}
-.item:hover{background:var(--panel2);color:var(--text)}
-.item.on{background:rgba(229,160,13,.12);color:var(--accent2)}
-.item .ic{width:18px;text-align:center}
-.item .n{margin-left:auto;font-size:12px;color:var(--dim)}
-.item.on .n{color:var(--accent)}
+/* ---------- rótulo com fio: o motivo que organiza todas as seções ---------- */
+.row-title,.sec h3,.est h3,.pick-h,.hist-mus h3{font-family:var(--f-rot);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:14px}
+.row-title::after,.sec h3::after,.est h3::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ---------- índice (lateral) ---------- */
+aside{width:248px;flex:none;background:var(--rail);display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:11px;padding:24px 22px 18px;font-family:var(--f-tit);font-weight:600;font-size:22px;letter-spacing:-.005em}
+.brand .logo{width:26px;height:26px;display:grid;place-items:center;color:var(--text)}
+.brand .logo svg{width:26px;height:26px}
+.shelves{display:flex;gap:22px;margin:0 22px 6px;padding:0;border-bottom:1px solid var(--line)}
+.shelves button{border:0;background:none;color:var(--muted);padding:6px 0 10px;font-family:var(--f-tit);font-size:17px;font-weight:600;box-shadow:inset 0 -2px 0 transparent;transition:color .15s,box-shadow .15s}
+.shelves button:hover{color:var(--text)}
+.shelves button.on{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+.nav{padding:4px 12px 14px;overflow-y:auto;flex:1}
+.nav h4{margin:20px 10px 6px;font-family:var(--f-rot);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.nav h4 button{background:none;border:0;color:var(--dim);padding:2px;display:grid;place-items:center;border-radius:3px}
+.nav h4 button:hover{color:var(--accent2)}
+.nav h4 button .i{width:14px;height:14px}
+.item{display:flex;align-items:center;gap:9px;width:100%;padding:6px 10px;border:0;border-radius:4px;background:none;text-align:left;color:var(--muted);font-size:13.5px;line-height:1.35}
+.item:hover{color:var(--text);background:var(--panel)}
+.item.on{color:var(--text);background:var(--panel2)}
+.item .ic{width:14px;display:grid;place-items:center;flex:none}
+.item .ic:empty{display:none}
+.item .ic .i{width:14px;height:14px;color:var(--dim)}
+.item .n{margin-left:auto;font-family:var(--f-rot);font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.item.on .n{color:var(--accent2)}
 .col-item{display:flex;align-items:center}
 .col-item .item{flex:1;min-width:0}
-.caret{width:18px;flex:none;background:none;border:0;color:var(--dim);font-size:11px;padding:0;transition:transform .12s;text-align:center}
+.caret{width:16px;flex:none;background:none;border:0;color:var(--dim);font-size:10px;padding:0;transition:transform .15s;text-align:center}
 .caret.aberta{transform:rotate(90deg)}
-button.caret:hover{color:var(--accent)}
-.empty-tags{padding:4px 10px;font-size:12.5px;color:var(--dim);line-height:1.45}
-.side-foot{padding:12px;border-top:1px solid var(--line)}
+button.caret:hover{color:var(--accent2)}
+.empty-tags{padding:2px 10px;font-size:12.5px;color:var(--dim);line-height:1.5}
+.side-foot{padding:10px 12px 14px}
+.side-foot .item .i{color:var(--dim)}
 
+/* ---------- barra de cima ---------- */
 main{flex:1;display:flex;flex-direction:column;min-width:0}
-.top{display:flex;align-items:center;gap:12px;padding:14px 26px;border-bottom:1px solid var(--line)}
-.search{flex:1;min-width:200px;max-width:420px;position:relative}
-.search input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:9px 14px 9px 36px;outline:none}
-.search input:focus{border-color:var(--accent)}
-.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;opacity:.5}
+.top{display:flex;align-items:center;gap:10px;padding:16px 40px 14px}
+.search{flex:1;min-width:200px;max-width:440px;position:relative}
+.search input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line2);border-radius:0;padding:9px 6px 9px 28px;outline:none;font-size:14.5px}
+.search input::placeholder{color:var(--dim)}
+.search input:focus{border-bottom-color:var(--accent)}
+.search input:focus-visible{outline:none}
+.search svg{position:absolute;left:2px;top:50%;transform:translateY(-50%);width:16px;color:var(--dim)}
 .spacer{flex:1}
-select.sel{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;outline:none}
-.size{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12px}
-.size input{accent-color:var(--accent);width:90px}
-.btn{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:8px 14px;font-size:14px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
-.btn:hover{border-color:#3a404c;background:#232833}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#16120a;font-weight:600}
+select.sel{background:transparent;border:0;border-radius:var(--r);padding:8px 8px;outline:none;color:var(--muted);font-size:13.5px;cursor:pointer}
+select.sel:hover{color:var(--text);background:var(--panel)}
+select.sel option{background:var(--panel);color:var(--text)}
+.size{display:flex;align-items:center;gap:6px;color:var(--dim);padding:0 6px}
+.size .i{width:13px;height:13px}
+.size input{accent-color:var(--accent);width:84px}
+.top .btn.icone{padding:8px 9px}
+
+/* ---------- botões ---------- */
+.btn{border:1px solid transparent;background:var(--panel2);border-radius:var(--r);padding:8px 14px;font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;color:var(--text);transition:background .12s,color .12s;line-height:1.25}
+.btn:hover{background:var(--panel3)}
+.btn .i{width:15px;height:15px}
+.btn.primary{background:var(--accent);color:var(--on-accent);font-weight:600}
 .btn.primary:hover{background:var(--accent2)}
-.btn.danger{color:#ff8a8d;border-color:#5a2a2c;background:#2a1719}
-.btn.ghost{background:none}
-.btn.on{border-color:var(--accent);color:var(--accent2)}
-.btn:disabled{opacity:.5;cursor:default}
+.btn.danger{color:var(--err);background:transparent;border-color:var(--line2)}
+.btn.danger:hover{background:var(--panel2)}
+.btn.ghost{background:none;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);background:var(--panel2)}
+.btn.on{color:var(--accent2);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:4px}
 .dd{position:relative}
-.menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px;min-width:230px;z-index:30;box-shadow:0 14px 40px rgba(0,0,0,.5);display:none}
+.menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--panel);border-radius:6px;padding:6px;min-width:260px;z-index:30;box-shadow:0 0 0 1px var(--line),0 24px 50px -12px rgba(0,0,0,.6);display:none}
 .menu.open{display:block}
-.menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 12px;border-radius:7px}
-.menu button:hover{background:#2a2f3a}
-.menu small{display:block;color:var(--dim);font-size:12px;margin-top:2px}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:9px 12px;border-radius:4px;font-weight:500}
+.menu button:hover{background:var(--panel2)}
+.menu small{display:block;color:var(--dim);font-size:12px;margin-top:2px;font-weight:400}
 
-.content{flex:1;overflow-y:auto;padding:22px 26px 90px}
-.head{display:flex;align-items:baseline;gap:12px;margin:0 0 16px}
-.head h1{margin:0;font-size:24px}
-.head span{color:var(--dim);font-size:14px}
-.row-title{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:4px 0 12px;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card),1fr));gap:22px 18px}
-.strip{display:grid;grid-auto-flow:column;grid-auto-columns:var(--card);gap:18px;overflow-x:auto;padding:4px 2px 8px;margin-bottom:28px}
+/* ---------- área de conteúdo ---------- */
+.content{flex:1;overflow-y:auto;padding:14px 40px 100px}
+.head{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 16px;margin:4px 0 26px}
+.head h1{margin:0;font-family:var(--f-tit);font-size:34px;font-weight:600;letter-spacing:-.012em;line-height:1.1}
+.head > span{font-family:var(--f-rot);color:var(--dim);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase}
+.head .btn{align-self:center}
+.row-title{margin:6px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card),1fr));gap:30px 22px}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:var(--card);gap:22px;overflow-x:auto;padding:4px 2px 10px;margin-bottom:34px}
 
+/* ---------- capas ---------- */
 .card{position:relative;cursor:pointer;outline:none}
-.cover{position:relative;aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;background:var(--panel2);box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s}
+.cover{position:relative;aspect-ratio:2/3;border-radius:var(--radius);overflow:hidden;background:var(--panel2);box-shadow:var(--sombra-capa);transition:transform .2s cubic-bezier(.2,.7,.3,1)}
+.cover::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none}
+.leit .cover::after{background:linear-gradient(90deg,rgba(0,0,0,.28),rgba(255,255,255,.05) 2.5%,transparent 6%)}
 .cover img{width:100%;height:100%;object-fit:cover;display:block}
 .cover .bgb{display:none}
-.cover.wide .bgb{display:block;position:absolute;inset:-12%;width:124%;height:124%;filter:blur(16px) brightness(.55) saturate(1.2)}
+.cover.wide .bgb{display:block;position:absolute;inset:-12%;width:124%;height:124%;filter:blur(16px) brightness(.55) saturate(1.1)}
 .cover.wide .main{position:relative;object-fit:contain}
-.dev{color:var(--muted);font-size:14px;margin-bottom:4px}
-.desc{color:var(--muted);font-size:14px;line-height:1.6;white-space:pre-line}
-textarea.inp{resize:vertical;min-height:90px;font:inherit}
-.preview{display:flex;gap:16px;margin-top:16px;background:var(--panel2);border-radius:12px;padding:14px}
-.preview img{width:160px;border-radius:8px;object-fit:cover;align-self:flex-start;flex:none}
-.preview h3{margin:0 0 4px;font-size:17px}
-.checks{display:flex;flex-direction:column;gap:8px;margin-top:12px;font-size:14px}
-.checks label{display:flex;align-items:center;gap:8px;cursor:pointer}
-.checks input{accent-color:var(--accent);width:16px;height:16px}
-.pick-h{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin:18px 0 10px;font-weight:600}
-.ipick{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
-.ipick button{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;background:var(--bg);height:120px}
-.ipick button:hover{border-color:#5a5f6a}
-.ipick button.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(229,160,13,.35)}
-.ipick img{width:100%;height:100%;object-fit:cover;display:block}
-.badge.upd{background:#3b82f6;color:#fff}
-.infos{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
-.pill{font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--text)}
-.pill.st-Completo{background:rgba(61,187,122,.18);color:#6ee7a8}
-.pill.st-Abandonado{background:rgba(229,72,77,.18);color:#ff8a8d}
-.pill.st-Pausado{background:rgba(229,160,13,.18);color:var(--accent2)}
-.pill.st-Em{background:rgba(59,130,246,.18);color:#93c5fd}
-.genres{display:flex;flex-wrap:wrap;gap:6px}
-.genres span{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-.upd-box{margin:0 26px 4px;padding:14px 16px;border-radius:12px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.upd-box b{color:#93c5fd}
-.upd-box .acts{margin-left:auto;display:flex;gap:8px}
-.tag-itch{grid-column:2/4;color:#fa5c5c;font-size:12px}
-.ph{width:100%;height:100%;display:flex;align-items:flex-end;padding:14px 14px 40px;font-weight:700;font-size:17px;line-height:1.15;text-shadow:0 2px 8px rgba(0,0,0,.4)}
-.card:hover .cover,.card:focus-visible .cover{transform:translateY(-3px);box-shadow:0 0 0 2px var(--accent),0 14px 28px rgba(0,0,0,.5)}
-.play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.35);opacity:0;transition:opacity .15s}
-.card:hover .play{opacity:1}
-.play span{width:52px;height:52px;border-radius:50%;background:var(--accent);display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.5)}
-.play span:hover{background:var(--accent2);transform:scale(1.06)}
-.play svg{width:22px;margin-left:3px}
-.badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.72);border-radius:6px;padding:3px 7px;font-size:11px;font-weight:600}
+.ph{width:100%;height:100%;display:flex;align-items:flex-end;padding:14px 14px 18px;font-family:var(--f-tit);font-weight:600;font-size:18px;line-height:1.12;color:#f4efe7;letter-spacing:-.005em}
+.card:hover .cover{transform:translateY(-3px)}
+.card:focus-visible .cover{outline:2px solid var(--accent);outline-offset:3px}
+.card:hover .meta .t{color:var(--accent2)}
+.play{position:absolute;left:8px;bottom:8px;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+.card:hover .play,.card:focus-within .play{opacity:1;transform:none}
+.play span{height:34px;padding:0 13px 0 11px;border-radius:4px;background:var(--accent);color:var(--on-accent);display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:13px;box-shadow:0 8px 18px -6px rgba(0,0,0,.6)}
+.play span:hover{background:var(--accent2)}
+.play svg{width:14px;height:14px}
+.badge{position:absolute;top:8px;left:8px;background:rgba(14,13,12,.86);color:#f1ede6;border-radius:2px;padding:3px 7px 2px;font-family:var(--f-rot);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .badge.live{background:var(--ok);color:#06210f}
 .badge.miss{background:var(--danger);color:#fff}
-.fav{position:absolute;top:8px;right:8px;color:var(--accent2);filter:drop-shadow(0 1px 3px rgba(0,0,0,.8));font-size:16px}
-.check{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:none}
+.badge.upd,.badge.cnovo{background:var(--accent);color:var(--on-accent)}
+.fav{position:absolute;top:8px;right:8px;color:#f6d38a;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7));display:grid}
+.fav .i{width:15px;height:15px}
+.check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.45);display:none}
 .selecting .check{display:block}
 .card.picked .check{background:var(--accent);border-color:var(--accent)}
-.card.picked .check::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #16120a;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
-.card.picked .cover{box-shadow:0 0 0 3px var(--accent)}
+.card.picked .check::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid var(--on-accent);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.card.picked .cover{outline:3px solid var(--accent);outline-offset:3px}
 .selecting .play{display:none}
-.meta{padding:8px 2px 0}
-.meta .t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta .s{font-size:12px;color:var(--dim);margin-top:2px}
+.meta{padding:10px 1px 0}
+.meta .t{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s}
+.meta .s{font-size:12.5px;color:var(--dim);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .s .sep{margin:0 5px;opacity:.6}
+.meta .s .vivo{color:var(--ok)}
+.marcador{height:2px;background:var(--line);margin-top:8px;border-radius:2px;overflow:hidden}
+.marcador i{display:block;height:100%;background:var(--accent)}
+.card .ler-btn{margin-top:9px;width:100%;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-align:center}
+.lojatag{display:none}
 
-.blank{max-width:520px;margin:70px auto;text-align:center;color:var(--muted);line-height:1.6}
-.blank h2{color:var(--text);margin:14px 0 8px}
-.blank .big{font-size:54px}
-.blank .acts{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+/* ---------- em andamento (o primeiro bloco da estante) ---------- */
+.destaque{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(250px,1fr);gap:0;margin:0 0 40px;border-radius:6px;overflow:hidden;background:var(--panel);min-height:300px}
+.d-palco{position:relative;display:flex;gap:28px;align-items:flex-end;padding:30px 32px;overflow:hidden;isolation:isolate}
+.d-fundo{position:absolute;inset:-50px;background:center/cover;filter:blur(38px) saturate(1.15) brightness(.55);z-index:-2;transform:scale(1.05)}
+.d-palco::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,11,10,.55),rgba(12,11,10,.15) 70%),linear-gradient(0deg,rgba(12,11,10,.55),transparent 60%);z-index:-1}
+.d-capa{width:150px;flex:none;border:0;padding:0;background:none;cursor:pointer;border-radius:var(--radius)}
+.d-capa .cover{box-shadow:0 20px 40px -14px rgba(0,0,0,.85)}
+.d-texto{min-width:0;color:#f3efe8;padding-bottom:4px}
+.d-kick{font-family:var(--f-rot);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:rgba(243,239,232,.72)}
+.d-tit{display:block;margin:8px 0 8px;font-family:var(--f-tit);font-size:34px;line-height:1.05;font-weight:600;letter-spacing:-.015em;background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer}
+.d-tit:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.d-info{font-size:13.5px;color:rgba(243,239,232,.78);display:flex;flex-wrap:wrap;gap:4px 0}
+.d-info span + span::before{content:"·";margin:0 9px;opacity:.6}
+.d-emdia{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(243,239,232,.8);padding:0 6px 0 2px}
+.d-emdia::before{content:"";width:7px;height:7px;border-radius:50%;background:#8fd8a8}
+.d-num{font-family:var(--f-rot);font-size:46px;line-height:1;font-weight:600;color:#fff;margin:10px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.d-num small.pre{margin:0 6px 0 0;text-transform:uppercase;letter-spacing:.12em;font-size:13px}
+.d-num small{font-size:16px;color:rgba(243,239,232,.6);font-weight:500;margin-left:6px;letter-spacing:.02em}
+.d-acts{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.d-acts .btn.ghost{color:#f3efe8;background:rgba(255,255,255,.1)}
+.d-acts .btn.ghost:hover{background:rgba(255,255,255,.18)}
+.d-lado{padding:22px 22px 18px;display:flex;flex-direction:column;min-width:0}
+.d-lado h2{margin:0 0 8px;font-family:var(--f-rot);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.d-item{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.d-item:first-of-type{border-top:0}
+.d-nome{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;text-align:left;color:var(--text)}
+.d-nome .cover{width:34px;flex:none;border-radius:2px;box-shadow:none}
+.d-nome .ph{font-size:7px;padding:3px}
+.d-nome b{display:block;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-nome small{display:block;color:var(--dim);font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d-nome:hover b{color:var(--accent2)}
+.d-nome > span{min-width:0}
+.d-item .btn{flex:none}
+.d-mais{margin-top:auto;padding-top:10px;font-size:12.5px;color:var(--dim)}
 
-.bulk{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(160%);background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 18px 50px rgba(0,0,0,.6);z-index:40;transition:transform .2s}
+/* ---------- estados vazios ---------- */
+.blank{max-width:500px;margin:80px auto;text-align:left;color:var(--muted);line-height:1.65;font-size:14.5px}
+.blank h2{color:var(--text);margin:0 0 10px;font-family:var(--f-tit);font-size:28px;font-weight:600;line-height:1.15}
+.blank .big{display:none}
+.blank .kick{font-family:var(--f-rot);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);margin-bottom:10px}
+.blank .acts{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.blank.curto{margin:50px 0;max-width:460px}
+
+/* ---------- seleção em massa ---------- */
+.bulk{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(170%);background:var(--panel);border-radius:6px;padding:8px;display:flex;align-items:center;gap:6px;box-shadow:0 0 0 1px var(--line),0 24px 50px -12px rgba(0,0,0,.7);z-index:40;transition:transform .22s cubic-bezier(.2,.7,.3,1)}
 .bulk.show{transform:translateX(-50%) translateY(0)}
-.bulk b{padding:0 8px;white-space:nowrap}
+.bulk b{padding:0 10px;white-space:nowrap;font-family:var(--f-rot);font-weight:600;letter-spacing:.04em}
 
-.shade{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+/* ---------- painel lateral (detalhes) ---------- */
+.shade{position:fixed;inset:0;background:var(--veu);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
 .shade.show{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;height:100%;width:min(560px,100%);background:var(--panel);z-index:51;transform:translateX(100%);transition:transform .25s;overflow-y:auto;border-left:1px solid var(--line)}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(580px,100%);background:var(--panel);z-index:51;transform:translateX(100%);transition:transform .28s cubic-bezier(.2,.7,.3,1);overflow-y:auto;box-shadow:-30px 0 60px -30px rgba(0,0,0,.6)}
 .drawer.show{transform:none}
-.hero{position:relative;padding:26px 26px 22px;display:flex;gap:20px;overflow:hidden}
-.hero .bgimg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(36px) brightness(.4) saturate(1.3);z-index:0}
+.hero{position:relative;padding:34px 30px 26px;display:flex;gap:22px;overflow:hidden;isolation:isolate;color:#f3efe8}
+.hero .bgimg{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(40px) brightness(.42) saturate(1.15);z-index:-2}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,9,8,.15),rgba(10,9,8,.5));z-index:-1}
 .hero>*:not(.bgimg){position:relative;z-index:1}
-.hero .cover{width:150px;flex:none}
-.hero h2{margin:4px 0 6px;font-size:24px;line-height:1.15}
-.hero .yr{color:var(--muted);font-size:14px}
-.hero .acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
-.x{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.45);font-size:20px;line-height:1}
-.x:hover{background:rgba(0,0,0,.7)}
-.sec{padding:18px 26px;border-top:1px solid var(--line)}
-.sec h3{margin:0 0 12px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--panel2);border-radius:10px;padding:12px}
-.stat b{display:block;font-size:17px}
-.stat small{color:var(--dim);font-size:12px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 6px 5px 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px}
-.chip button{border:0;background:none;color:var(--dim);font-size:15px;line-height:1;padding:0 4px}
-.chip button:hover{color:var(--danger)}
-.chips input{background:none;border:1px dashed var(--line);border-radius:999px;padding:5px 12px;outline:none;font-size:13px;min-width:190px}
-.chips input:focus{border-color:var(--accent)}
-.path{font-family:Consolas,monospace;font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:8px;padding:10px 12px;word-break:break-all}
-.toggles{display:flex;gap:8px;flex-wrap:wrap}
+.hero .cover{width:140px;flex:none;align-self:flex-start;box-shadow:0 18px 34px -14px rgba(0,0,0,.9)}
+.hero h2{margin:6px 0 6px;font-family:var(--f-tit);font-size:30px;line-height:1.08;font-weight:600;letter-spacing:-.012em}
+.hero .yr{font-family:var(--f-rot);color:rgba(243,239,232,.7);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-top:6px}
+.hero .dev{color:rgba(243,239,232,.78)}
+.hero .hint{color:rgba(243,239,232,.66)}
+.hero .acts{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.hero .acts .btn:not(.primary){background:rgba(255,255,255,.1);color:#f3efe8}
+.hero .acts .btn:not(.primary):hover{background:rgba(255,255,255,.18)}
+.hero .acts .btn.on{border-color:transparent;color:#f6d38a}
+.x{position:absolute;top:14px;right:14px;z-index:2;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#f3efe8;display:grid;place-items:center;font-size:20px;line-height:1}
+.x:hover{background:rgba(0,0,0,.6)}
+.x .i{width:16px;height:16px}
+.sec{padding:22px 30px}
+.sec + .sec{padding-top:6px}
+.sec h3{margin:0 0 14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0 22px}
+.stat{border-top:1px solid var(--line2);padding:10px 0 4px}
+.stat b{display:block;font-family:var(--f-tit);font-size:21px;font-weight:600;line-height:1.2}
+.stat small{font-family:var(--f-rot);color:var(--dim);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.dev{color:var(--muted);font-size:14px;margin-bottom:4px}
+.desc{color:var(--muted);font-size:14.5px;line-height:1.7;white-space:pre-line;max-width:62ch}
+.infos{display:flex;flex-wrap:wrap;align-items:center;gap:4px 0;margin:6px 0 2px}
+.pill{font-size:13px;font-weight:500;padding:0;background:none;color:inherit;opacity:.88}
+.pill + .pill::before{content:"·";margin:0 8px;opacity:.55}
+.pill.st-Completo{color:var(--ok)}
+.pill.st-Abandonado{color:var(--err)}
+.pill.st-Pausado{color:var(--warn)}
+.pill.st-Em{color:inherit}
+.hero .pill.st-Completo{color:#8fd8a8}
+.hero .pill.st-Abandonado{color:#ffa49c}
+.hero .pill.st-Pausado{color:#f4c57d}
+.pill.wand{color:#7fe0cf}
+.pill.loja{display:inline-flex;align-items:center;gap:6px}
+.genres{display:flex;flex-wrap:wrap;gap:4px 0;font-size:13.5px;color:var(--muted)}
+.genres span + span::before{content:"/";margin:0 9px;color:var(--line2)}
+.upd-box{margin:0 30px 6px;padding:14px 16px;border-radius:var(--r);background:var(--accent-bg);display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px}
+.upd-box b{color:var(--accent2)}
+.upd-box .acts{margin-left:auto;display:flex;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{background:var(--panel2);border:0;border-radius:3px;padding:5px 4px 5px 10px;font-size:13px;display:inline-flex;align-items:center;gap:4px}
+.chip button{border:0;background:none;color:var(--dim);font-size:15px;line-height:1;padding:0 5px}
+.chip button:hover{color:var(--err)}
+.chips input{background:none;border:0;border-bottom:1px dashed var(--line2);border-radius:0;padding:5px 2px;outline:none;font-size:13px;min-width:200px}
+.chips input:focus{border-bottom-color:var(--accent)}
+.path{font-family:"Cascadia Mono",Consolas,monospace;font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:4px;padding:10px 12px;word-break:break-all}
+.toggles{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:34px}
+.toggles .btn{background:none;color:var(--muted);padding:7px 10px}
+.toggles .btn:hover{background:var(--panel2);color:var(--text)}
+.situacoes{display:flex;flex-wrap:wrap;gap:0;margin-top:14px;border-radius:4px;overflow:hidden;width:max-content;max-width:100%;background:rgba(255,255,255,.08)}
+.situacoes button{background:none;border:0;color:rgba(243,239,232,.72);padding:6px 12px;font-size:12.5px;cursor:pointer}
+.situacoes button + button{box-shadow:inset 1px 0 0 rgba(255,255,255,.08)}
+.situacoes button:hover{color:#fff}
+.situacoes button.on{background:#f3efe8;color:#16130f;font-weight:600}
+textarea.nota{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:14px;line-height:1.55}
+.sessoes{list-style:none;margin:0;padding:0;font-size:13px;color:var(--muted)}
+.sessoes li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.sessoes li span{color:var(--text);font-family:var(--f-rot);font-variant-numeric:tabular-nums}
 
-.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+/* ---------- janelas (modais) ---------- */
+.modal-wrap{position:fixed;inset:0;background:var(--veu);z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-wrap.show{display:flex}
-.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(640px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.6)}
-.modal.wide{width:min(920px,100%)}
-.modal header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-.modal header h2{margin:0;font-size:18px}
-.modal header .x{position:static}
-.modal .body{padding:20px 22px;overflow-y:auto}
-.modal footer{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;align-items:center;flex-wrap:wrap}
+.modal{background:var(--panel);border-radius:8px;width:min(660px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 0 0 1px var(--line),0 40px 90px -20px rgba(0,0,0,.7)}
+.modal.wide{width:min(940px,100%)}
+.modal header{padding:22px 26px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal header h2{margin:0;font-family:var(--f-tit);font-size:24px;font-weight:600;letter-spacing:-.01em}
+.modal header .x{position:static;background:var(--panel2);color:var(--muted)}
+.modal header .x:hover{color:var(--text);background:var(--panel3)}
+.modal .body{padding:16px 26px 22px;overflow-y:auto}
+.modal footer{padding:14px 26px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;align-items:center;flex-wrap:wrap}
 .modal footer .left{margin-right:auto;color:var(--dim);font-size:13px}
-.abas{display:flex;gap:4px;margin:12px 22px 0;background:var(--bg);border-radius:10px;padding:4px;flex:none}
-.abas button{flex:1;border:0;background:none;color:var(--muted);padding:8px 6px;border-radius:7px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.abas{display:flex;gap:24px;margin:0 26px;background:none;border-bottom:1px solid var(--line);padding:0;flex:none;overflow-x:auto}
+.abas button{flex:none;border:0;background:none;color:var(--muted);padding:9px 0 11px;font-size:14px;font-weight:600;white-space:nowrap;box-shadow:inset 0 -2px 0 transparent}
 .abas button:hover{color:var(--text)}
-.abas button.on{background:var(--panel2);color:var(--accent2)}
-label.f{display:block;margin-bottom:14px}
-label.f>span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-.inp{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;outline:none}
-.inp:focus{border-color:var(--accent)}
-.inline{display:flex;gap:8px}
+.abas button.on{color:var(--text);box-shadow:inset 0 -2px 0 var(--accent)}
+.modal .body h3{font-family:var(--f-tit);font-weight:600;font-size:18px !important}
+label.f{display:block;margin-bottom:16px}
+label.f>span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.inp{width:100%;background:var(--panel2);border:1px solid transparent;border-radius:var(--r);padding:10px 12px;outline:none}
+.inp::placeholder{color:var(--dim)}
+.inp:focus{border-color:var(--accent);background:var(--bg)}
+.inp:focus-visible{outline:none}
+textarea.inp{resize:vertical;min-height:90px;font:inherit}
+.inline{display:flex;gap:8px;align-items:center}
 .inline .inp{flex:1}
-.hint{font-size:13px;color:var(--dim);line-height:1.55}
-.steps{margin:0 0 16px;padding-left:20px;color:var(--muted);line-height:1.7;font-size:14px}
-.scan-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
-.scan-row{display:grid;grid-template-columns:24px 1fr 1.3fr;gap:10px;align-items:center;background:var(--panel2);border-radius:10px;padding:10px 12px}
+.hint{font-size:13px;color:var(--dim);line-height:1.6}
+.steps{margin:0 0 16px;padding-left:20px;color:var(--muted);line-height:1.75;font-size:14px}
+.preview{display:flex;gap:16px;margin-top:16px;background:var(--panel2);border-radius:var(--r);padding:14px}
+.preview img{width:150px;border-radius:3px;object-fit:cover;align-self:flex-start;flex:none}
+.preview h3{margin:0 0 4px;font-size:17px}
+.checks{display:flex;flex-direction:column;gap:9px;margin-top:12px;font-size:14px}
+.checks label{display:flex;align-items:center;gap:9px;cursor:pointer}
+.checks input{accent-color:var(--accent);width:16px;height:16px}
+.pick-h{margin:20px 0 10px}
+.ipick{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.ipick button{padding:0;border:2px solid transparent;border-radius:4px;overflow:hidden;background:var(--bg);height:120px}
+.ipick button:hover{border-color:var(--line2)}
+.ipick button.on{border-color:var(--accent)}
+.ipick img{width:100%;height:100%;object-fit:cover;display:block}
+.scan-list{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.scan-row{display:grid;grid-template-columns:24px 1fr 1.3fr;gap:10px;align-items:center;background:var(--panel2);border-radius:var(--r);padding:10px 12px}
 .scan-row.done{opacity:.5}
 .scan-row input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
 .scan-row .inp{padding:7px 10px;background:var(--bg)}
-.scan-row select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:12.5px}
+.scan-row select{width:100%;background:var(--bg);border:0;border-radius:4px;padding:7px 8px;font-size:12.5px}
 .scan-row small{grid-column:2/4;color:var(--dim);font-size:12px}
-.matches{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
-.match{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+.tag-itch{grid-column:2/4;color:var(--err);font-size:12px}
+.matches{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.match{background:var(--panel2);border:1px solid transparent;border-radius:4px;padding:6px 12px;font-size:13px}
 .match.on{border-color:var(--accent);color:var(--accent2)}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
-.cgrid button{padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;background:var(--panel2);aspect-ratio:2/3}
+.cgrid button{padding:0;border:2px solid transparent;border-radius:4px;overflow:hidden;background:var(--panel2);aspect-ratio:2/3}
 .cgrid button:hover{border-color:var(--accent)}
 .cgrid img{width:100%;height:100%;object-fit:cover;display:block}
-.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:24px auto}
+.spin{width:22px;height:22px;border:2px solid var(--line2);border-top-color:var(--accent);border-radius:50%;animation:sp .9s linear infinite;margin:40px auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 
-.lojatag{position:absolute;left:8px;bottom:8px;display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.72);border-radius:6px;padding:3px 7px;font-size:11px;font-weight:600;max-width:calc(100% - 16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(4px)}
-.wandtag{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.72);color:#5eead4;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
-.lojatag:has(~ .wandtag){max-width:calc(100% - 70px)}
-.pill.wand{background:rgba(94,234,212,.14);color:#5eead4}
-.dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
-.item .dot{margin:0 5px}
-.pill.loja{display:inline-flex;align-items:center;gap:6px}
-.aviso{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:12px;background:rgba(229,160,13,.10);border:1px solid rgba(229,160,13,.35);margin:0 0 22px;font-size:14px}
+/* ---------- lojas, fontes, avisos ---------- */
+.dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block}
+.item .dot{margin:0 3px}
+.aviso{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 14px 12px 18px;border-radius:var(--r);background:var(--panel);margin:0 0 30px;font-size:14px;position:relative}
+.aviso::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+.aviso > div:first-of-type{flex:1;min-width:240px;line-height:1.5}
 .aviso .acts{margin-left:auto;display:flex;gap:8px}
-.grupo{background:var(--panel2);border-radius:12px;padding:12px;margin-bottom:12px}
+.grupo{background:var(--panel2);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .grupo .gs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.gmini{display:flex;gap:10px;align-items:center;background:var(--bg);border-radius:10px;padding:8px 12px 8px 8px;flex:1;min-width:220px}
-.gmini .cover{width:44px;flex:none;box-shadow:none;border-radius:6px}
+.gmini{display:flex;gap:10px;align-items:center;background:var(--bg);border-radius:4px;padding:8px 12px 8px 8px;flex:1;min-width:220px}
+.gmini .cover{width:44px;flex:none;box-shadow:none;border-radius:2px}
 .gmini .ph{font-size:9px;padding:4px}
 .gmini b{display:block;font-size:14px}
 .gmini small{color:var(--dim);font-size:12px;display:flex;align-items:center;gap:6px}
 .gmini input{accent-color:var(--accent);width:16px;height:16px;flex:none}
-.fontes{display:flex;flex-direction:column;gap:8px}
-.fonte{display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:10px;padding:10px 12px;flex-wrap:wrap}
-.fonte .q{flex:1;min-width:100px}
+.fontes{display:flex;flex-direction:column;gap:0}
+.fonte{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.fonte:first-child{border-top:0}
+.fonte .q{flex:1;min-width:120px}
 .fonte .btn{padding:6px 10px;font-size:13px}
-.fonte .q b{display:flex;align-items:center;gap:7px;font-size:14px}
+.fonte .q b{display:flex;align-items:center;gap:8px;font-size:14px}
 .fonte .q small{color:var(--dim);font-size:12px}
-.fonte .principal{font-size:11px;font-weight:700;color:var(--accent2);background:rgba(229,160,13,.14);border-radius:999px;padding:2px 8px}
-.lojas-cfg{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.loja-row{display:flex;align-items:center;gap:12px;background:var(--panel2);border-radius:8px;padding:9px 12px}
+.fonte .principal{font-family:var(--f-rot);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2)}
+.lojas-cfg{display:flex;flex-direction:column;gap:0;margin-bottom:12px}
+.loja-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.lojas-cfg .loja-row:first-child{border-top:0}
 .loja-row .q{flex:1}
 .loja-row .q b{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
-.loja-row .q small{color:var(--dim);font-size:12px}
-.sw{position:relative;width:38px;height:22px;flex:none}
+.loja-row .q small{color:var(--dim);font-size:12px;display:block;margin-top:2px}
+.sw{position:relative;width:36px;height:20px;flex:none}
 .sw input{opacity:0;width:0;height:0;position:absolute}
-.sw span{position:absolute;inset:0;border-radius:999px;background:#3a404c;transition:background .15s;cursor:pointer}
-.sw span::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw span{position:absolute;inset:0;border-radius:999px;background:var(--line2);transition:background .15s;cursor:pointer}
+.sw span::after{content:"";position:absolute;left:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .15s}
 .sw input:checked+span{background:var(--accent)}
 .sw input:checked+span::after{transform:translateX(16px)}
-.sw input:focus-visible+span{outline:2px solid var(--accent2);outline-offset:2px}
-.shelves{display:flex;gap:4px;margin:0 12px 4px;background:var(--bg);border-radius:10px;padding:4px}
-.shelves button{flex:1;border:0;background:none;color:var(--muted);padding:8px 4px;border-radius:7px;font-size:13.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
-.shelves button:hover{color:var(--text)}
-.shelves button.on{background:var(--panel2);color:var(--accent2);box-shadow:0 1px 0 rgba(255,255,255,.04)}
-.badge.cnovo{background:#3b82f6;color:#fff}
-.btn.sm{padding:5px 10px;font-size:12.5px;border-radius:7px}
-.card .ler-btn{margin-top:7px;width:100%;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-align:center}
-.lista{display:flex;flex-direction:column;gap:6px;max-width:860px}
-.lista .dia{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin:14px 0 4px;font-weight:600}
-.lrow{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px 8px 8px;cursor:pointer}
-.lrow:hover{border-color:#3a404c}
-.lrow .cover{width:46px;flex:none;border-radius:7px;box-shadow:none}
-.lrow .cover .ph{font-size:9px;padding:4px}
+.sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- Leitura: listas e capítulos ---------- */
+.lista{display:flex;flex-direction:column;gap:0;max-width:880px}
+.lista .dia{font-family:var(--f-tit);font-size:19px;font-weight:600;color:var(--text);margin:26px 0 6px;text-transform:none;letter-spacing:0}
+.lista .dia:first-child{margin-top:0}
+.lista .dia::first-letter{text-transform:uppercase}
+.lrow{display:flex;align-items:center;gap:14px;background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 4px;cursor:pointer}
+.lrow:hover{background:var(--panel)}
+.lrow:hover .q b{color:var(--accent2)}
+.lrow .cover{width:40px;flex:none;border-radius:2px;box-shadow:none}
+.lrow .cover .ph{font-size:8px;padding:4px}
 .lrow .q{flex:1;min-width:0}
-.lrow .q b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .q b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .lrow .q small{color:var(--muted);font-size:13px}
-.lrow .when{color:var(--dim);font-size:12.5px;white-space:nowrap}
-.caps{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.cap{display:flex;align-items:center;gap:8px;padding:0 6px 0 0;border-bottom:1px solid var(--line)}
-.cap:last-child{border-bottom:0}
-.cap .lnk{flex:1;text-align:left;background:none;border:0;padding:10px 14px;font-size:14px}
+.lrow .when{font-family:var(--f-rot);color:var(--dim);font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.caps{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.cap{display:flex;align-items:center;gap:8px;padding:0 4px 0 0;border-bottom:1px solid var(--line)}
+.cap .lnk{flex:1;text-align:left;background:none;border:0;padding:9px 4px;font-size:14px}
 .cap .lnk:hover{color:var(--accent2)}
 .cap.lido .lnk{color:var(--dim)}
-.cap .ck{background:none;border:1px solid var(--line);border-radius:999px;width:28px;height:28px;color:var(--dim);font-size:13px}
-.cap.lido .ck{background:rgba(61,187,122,.15);border-color:rgba(61,187,122,.4);color:#6ee7a8}
-.cap.atual{background:rgba(229,160,13,.07)}
-.cap .tagc{font-size:11px;font-weight:700;color:var(--accent2)}
+.cap .ck{background:none;border:1px solid var(--line2);border-radius:50%;width:26px;height:26px;color:var(--dim);font-size:12px;display:grid;place-items:center;padding:0}
+.cap .ck:hover{border-color:var(--text)}
+.cap.lido .ck{background:var(--panel3);border-color:transparent;color:var(--text)}
+.cap.atual{background:var(--accent-bg)}
+.cap.atual .lnk{font-weight:600}
+.cap .tagc{font-family:var(--f-rot);font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2)}
 .sites-cfg{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
 .site-row{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;align-items:center}
 .site-row .inp{padding:8px 10px}
-.filtros{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 16px 14px;margin:0 0 20px}
-.filtros h5{margin:12px 0 8px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);font-weight:600;display:flex;align-items:center;gap:10px}
-.filtros h5 button{background:none;border:0;color:var(--accent);font-size:11px;padding:0;text-transform:none;letter-spacing:0}
-.fchips{display:flex;flex-wrap:wrap;gap:7px}
-.fchip{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:6px 12px 6px 7px;background:#262b35;color:var(--muted);font-size:13px;font-weight:600}
-.fchip i{width:17px;height:17px;border-radius:50%;border:2px solid #4a505c;display:grid;place-items:center;font-style:normal;font-size:10px;color:#0f1115;flex:none}
-.fchip.on{background:rgba(103,212,240,.13);color:var(--text)}
-.fchip.on i{background:#67d4f0;border-color:#67d4f0}
-.fchip.fora{opacity:.55;text-decoration:line-through}
-.fchip small{color:var(--dim);font-weight:400}
-.leitor{position:fixed;inset:0;background:#0b0c0f;z-index:85;display:none;flex-direction:column}
+.filtros{background:var(--panel);border-radius:6px;padding:4px 18px 16px;margin:-8px 0 30px}
+.filtros h5{margin:14px 0 9px;font-family:var(--f-rot);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600;display:flex;align-items:center;gap:10px}
+.filtros h5 button{background:none;border:0;color:var(--accent2);font-size:12px;padding:0;text-transform:none;letter-spacing:0;font-family:var(--f-ui)}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:4px;padding:5px 11px 5px 7px;background:var(--panel2);color:var(--muted);font-size:13px;font-weight:500}
+.fchip:hover{color:var(--text)}
+.fchip i{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--line2);display:grid;place-items:center;font-style:normal;font-size:10px;color:var(--on-accent);flex:none}
+.fchip.on{color:var(--text)}
+.fchip.on i{background:var(--accent);border-color:var(--accent)}
+.fchip.fora{opacity:.5;text-decoration:line-through}
+.fchip small{color:var(--dim);font-weight:400;font-family:var(--f-rot)}
+
+/* ---------- leitor (sempre escuro: é para ler) ---------- */
+.leitor{position:fixed;inset:0;background:#0b0a09;color:#ede9e2;z-index:85;display:none;flex-direction:column}
 .leitor.show{display:flex}
 body.lendo{overflow:hidden}
-.lbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(22,25,32,.96);border-bottom:1px solid var(--line);flex-wrap:wrap}
-.lbar .ltit{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lbar .sel{padding:6px 8px;font-size:13px;max-width:280px}
-.lbar .btn{padding:6px 12px;font-size:13px}
-.lpag{color:var(--muted);font-size:13px;white-space:nowrap}
+.lbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#161412;flex-wrap:wrap}
+.lbar .ltit{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--f-tit);font-weight:600;font-size:15px}
+.lbar .sel{padding:6px 8px;font-size:13px;max-width:280px;color:#c9c3b8}
+.lbar .btn{padding:6px 12px;font-size:13px;background:#24221f;color:#ede9e2}
+.lbar .btn:hover{background:#2e2c28}
+.lbar .btn.primary{background:var(--accent);color:var(--on-accent)}
+.lpag{color:#aba59b;font-size:13px;white-space:nowrap;font-family:var(--f-rot);font-variant-numeric:tabular-nums}
 .lpaginas{flex:1;overflow:auto;position:relative;display:flex;flex-direction:column;align-items:center}
 .lpaginas img{display:block;max-width:100%;user-select:none}
 .ajuste-largura.modo-rolagem .lpaginas img{width:min(900px,100%)}
@@ -301,18 +449,23 @@ body.lendo{overflow:hidden}
 .ajuste-altura:not(.modo-rolagem) #lUma{max-height:calc(100vh - 60px);width:auto}
 .lzona{position:absolute;top:0;bottom:0;width:50%;cursor:pointer}
 .lzona.esq{left:0}.lzona.dir{right:0}
-.lfim{padding:40px 20px 80px;text-align:center;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:14px}
-.toasts{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:90}
-.toast{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;max-width:360px;font-size:14px;box-shadow:0 12px 30px rgba(0,0,0,.5);animation:in .2s}
-.toast.err{border-left-color:var(--danger)}
+.lfim{padding:40px 20px 80px;text-align:center;color:#aba59b;display:flex;flex-direction:column;align-items:center;gap:14px}
+
+/* ---------- avisos rápidos ---------- */
+.toasts{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:90}
+.toast{display:flex;align-items:baseline;gap:11px;background:var(--panel2);color:var(--text);border-radius:var(--r);padding:12px 16px;max-width:380px;font-size:13.5px;line-height:1.45;box-shadow:0 18px 40px -14px rgba(0,0,0,.7);animation:in .22s cubic-bezier(.2,.7,.3,1)}
+.toast::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;transform:translateY(-1px)}
+.toast.err::before{background:var(--danger)}
 @keyframes in{from{opacity:0;transform:translateY(8px)}}
-.tocando{display:none;position:relative;flex:none;align-items:center;gap:12px;padding:9px 18px 9px 14px;background:var(--panel);border-top:1px solid var(--line)}
+
+/* ---------- tocando agora ---------- */
+.tocando{display:none;position:relative;flex:none;align-items:center;gap:14px;padding:10px 40px 10px 22px;background:var(--rail)}
 body.com-tocando .tocando{display:flex}
-body.com-tocando .bulk.show{bottom:84px}
-body.com-tocando .toasts{bottom:84px}
-.tocando .tprog{position:absolute;left:0;right:0;top:-1px;height:2px;background:transparent}
-.tocando .tprog i{display:block;height:100%;width:0;background:var(--accent);opacity:.8}
-.tocando .tcapa{width:44px;height:44px;border-radius:6px;background:var(--panel2);flex:none;overflow:hidden;display:grid;place-items:center;color:var(--dim);font-size:18px}
+body.com-tocando .bulk.show{bottom:86px}
+body.com-tocando .toasts{bottom:86px}
+.tocando .tprog{position:absolute;left:0;right:0;top:0;height:2px;background:var(--line)}
+.tocando .tprog i{display:block;height:100%;width:0;background:var(--accent)}
+.tocando .tcapa{width:44px;height:44px;border-radius:3px;background:var(--panel2);flex:none;overflow:hidden;display:grid;place-items:center;color:var(--dim);font-size:18px}
 .tocando .tcapa img{width:100%;height:100%;object-fit:cover;display:block}
 .tocando .tq{flex:1;min-width:0;cursor:pointer;background:none;border:0;text-align:left;padding:0}
 .tocando .tq b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -324,56 +477,79 @@ body.com-tocando .toasts{bottom:84px}
 .tbot:disabled{opacity:.3;cursor:default;background:none}
 .tbot svg{width:16px;height:16px;fill:currentColor}
 .tbot.grande{width:40px;height:40px;background:var(--text);color:var(--bg)}
-.tbot.grande:hover{background:#fff}
+.tbot.grande:hover{background:var(--accent);color:var(--on-accent)}
 .tbot.grande svg{width:18px;height:18px}
-.tela-letra{position:fixed;inset:0;z-index:80;background:#0b0c0f;display:none;overflow:hidden}
+.tfontes{display:flex;gap:4px;flex:none}
+.tfontes .btn.on{border-color:var(--accent);color:var(--accent2)}
+
+/* ---------- tela da letra (sempre escura) ---------- */
+.tela-letra{position:fixed;inset:0;z-index:80;background:#0b0a09;color:#ede9e2;display:none;overflow:hidden}
 .tela-letra.show{display:flex}
-.tela-letra .tl-fundo{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(60px) brightness(.32) saturate(1.3)}
+.tela-letra .tl-fundo{position:absolute;inset:-60px;background-size:cover;background-position:center;filter:blur(60px) brightness(.3) saturate(1.2)}
 .tela-letra .x{z-index:3}
+.tela-letra .btn{background:rgba(255,255,255,.1);color:#ede9e2}
+.tela-letra .btn:hover{background:rgba(255,255,255,.18)}
+.tela-letra .btn.on{border-color:var(--accent);color:#f2805c}
+.tela-letra .tbot{color:#ede9e2}
+.tela-letra .tbot:hover{background:rgba(255,255,255,.1)}
+.tela-letra .tbot.grande{background:#ede9e2;color:#0b0a09}
 .tl-lado{position:relative;z-index:1;width:min(380px,40%);flex:none;padding:56px 34px;display:flex;flex-direction:column;justify-content:center;gap:6px}
-.tl-capa{width:100%;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--panel2);box-shadow:0 20px 50px rgba(0,0,0,.55);display:grid;place-items:center;font-size:60px;color:var(--dim);margin-bottom:16px}
+.tl-capa{width:100%;aspect-ratio:1;border-radius:4px;overflow:hidden;background:#24221f;box-shadow:0 24px 50px -16px rgba(0,0,0,.8);display:grid;place-items:center;font-size:60px;color:#8b857b;margin-bottom:18px}
 .tl-capa img{width:100%;height:100%;object-fit:cover;display:block}
-.tl-lado h2{margin:0;font-size:24px;line-height:1.2}
-.tl-art{color:var(--muted);font-size:16px}
-.tl-fonte{color:var(--dim);font-size:13px}
-.tl-barra{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.tl-prog{flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}
-.tl-prog i{display:block;height:100%;width:0;background:var(--text)}
+.tl-lado h2{margin:0;font-family:var(--f-tit);font-size:28px;line-height:1.15;font-weight:600}
+.tl-art{color:#c9c3b8;font-size:16px}
+.tl-fonte{color:#8b857b;font-size:13px}
+.tl-barra{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:12px;color:#aba59b;font-family:var(--f-rot);font-variant-numeric:tabular-nums}
+.tl-prog{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden}
+.tl-prog i{display:block;height:100%;width:0;background:#ede9e2}
 .tl-lado .tbots{justify-content:center;margin-top:10px;gap:14px}
 .tl-letra{position:relative;z-index:1;flex:1;overflow-y:auto;padding:16vh 48px 40vh 20px;scroll-behavior:smooth}
-.tl-letra p{margin:0;padding:7px 0;font-size:26px;font-weight:700;line-height:1.3;color:rgba(255,255,255,.38);transition:color .25s;max-width:820px}
+.tl-letra p{margin:0;padding:7px 0;font-family:var(--f-tit);font-size:28px;font-weight:600;line-height:1.3;color:rgba(255,255,255,.34);transition:color .25s;max-width:820px}
 .tl-letra p.on{color:#fff}
 .tl-letra.pula p:not(.vazia){cursor:pointer}
 .tl-letra.pula p:not(.vazia):not(.on):hover{color:rgba(255,255,255,.7)}
 .tl-prog.pula{cursor:pointer;height:6px}
-.outra-busca{display:none;flex:none;align-items:center;gap:10px;padding:8px 22px;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto}
+.tl-hist{margin:14px auto 0}
+.tl-lado .tfontes{justify-content:center;margin-top:12px;flex-wrap:wrap}
+.tl-letra p.vazia{min-height:1em}
+.tl-texto{font-family:var(--f-tit);font-size:22px;line-height:1.6;white-space:pre-line;color:rgba(255,255,255,.88);max-width:820px;font-weight:600}
+.tl-aviso{max-width:520px;color:#aba59b;font-size:16px;line-height:1.6;margin-top:10vh}
+.tl-aviso b{color:#ede9e2;display:block;font-family:var(--f-tit);font-size:22px;margin-bottom:6px}
+.tl-aviso .btn{margin-top:16px}
+.tl-credito{margin-top:28px;color:#8b857b;font-size:12.5px}
+
+/* ---------- busca na outra estante ---------- */
+.outra-busca{display:none;flex:none;align-items:center;gap:10px;padding:2px 40px 12px;overflow-x:auto}
 .outra-busca.show{display:flex}
-.outra-busca .rot{color:var(--muted);font-size:13px;white-space:nowrap}
-.outra-busca .ob{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 10px 4px 4px;color:var(--text);flex:none;max-width:240px;cursor:pointer}
-.outra-busca .ob:hover{border-color:var(--accent)}
-.outra-busca .ob i{width:26px;height:36px;border-radius:4px;background:var(--line) center/cover;flex:none}
+.outra-busca .rot{font-family:var(--f-rot);color:var(--dim);font-size:12px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.outra-busca .ob{display:flex;align-items:center;gap:9px;background:var(--panel);border:0;border-radius:4px;padding:4px 12px 4px 4px;color:var(--text);flex:none;max-width:240px;cursor:pointer}
+.outra-busca .ob:hover{background:var(--panel2)}
+.outra-busca .ob i{width:24px;height:34px;border-radius:2px;background:var(--line) center/cover;flex:none}
 .outra-busca .ob b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
 .outra-busca .ob small{display:block;font-size:11.5px;color:var(--dim);text-align:left}
-.est{max-width:900px}
-.est h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:26px 0 10px}
+
+/* ---------- estatísticas ---------- */
+.est{max-width:920px}
+.est h3{margin:36px 0 14px}
 .est .stats{grid-template-columns:repeat(4,1fr)}
-.barras{display:flex;align-items:flex-end;gap:6px;height:160px;padding:8px 0 0}
+.est .stat b{font-family:var(--f-rot);font-size:30px;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.barras{display:flex;align-items:flex-end;gap:6px;height:170px;padding:8px 0 0;border-bottom:1px solid var(--line)}
 .barra{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;min-width:0}
-.barra i{display:block;width:100%;max-width:46px;background:var(--accent);border-radius:5px 5px 0 0;opacity:.85}
-.barra:hover i{opacity:1}
-.barra small{font-size:11px;color:var(--dim);white-space:nowrap}
-.topo{display:flex;flex-direction:column;gap:4px}
-.topo button{display:grid;grid-template-columns:minmax(0,1.3fr) 2fr auto;align-items:center;gap:12px;background:none;border:0;color:var(--text);padding:6px 4px;border-radius:6px;cursor:pointer;text-align:left;font:inherit;font-size:13.5px}
-.topo button:hover{background:var(--panel2)}
+.barra i{display:block;width:100%;max-width:40px;background:var(--line2);border-radius:2px 2px 0 0}
+.barra:last-child i{background:var(--accent)}
+.barra:hover i{background:var(--accent2)}
+.barra small{font-family:var(--f-rot);font-size:11px;color:var(--dim);white-space:nowrap;padding-bottom:6px}
+.topo{display:flex;flex-direction:column;gap:0}
+.topo button{display:grid;grid-template-columns:minmax(0,1.3fr) 2fr auto;align-items:center;gap:14px;background:none;border:0;border-top:1px solid var(--line);color:var(--text);padding:9px 2px;cursor:pointer;text-align:left;font:inherit;font-size:13.5px}
+.topo button:first-child{border-top:0}
+.topo button:hover .nm{color:var(--accent2)}
 .topo .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.topo .tr{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}
-.topo .tr i{display:block;height:100%;background:var(--accent);border-radius:99px}
-.topo b{font-weight:600;font-size:12.5px;color:var(--muted);white-space:nowrap}
-.est .chips .chip{cursor:pointer;font:inherit;font-size:13px}
-.est .chips .chip b{margin-left:6px;color:var(--accent2)}
-@media (max-width:700px){.est .stats{grid-template-columns:repeat(2,1fr)}}
-.tl-hist{margin:14px auto 0}
-.hist-mus h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px}
+.topo .tr{height:4px;background:var(--panel2);border-radius:4px;overflow:hidden}
+.topo .tr i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.topo b{font-family:var(--f-rot);font-weight:600;font-size:12.5px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.est .chips .chip{cursor:pointer;font:inherit;font-size:13px;padding:6px 12px}
+.est .chips .chip b{margin-left:6px;color:var(--accent2);font-family:var(--f-rot)}
+.hist-mus h3{margin:16px 0 8px}
 .hist-mus h3:first-child{margin-top:0}
 .hist-mus .sessoes li{gap:12px}
 .hist-mus .sessoes li .q{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
@@ -381,100 +557,123 @@ body.com-tocando .toasts{bottom:84px}
 .hist-mus .dois{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .hist-mus h4{margin:4px 0 6px;font-size:13px}
 .hist-mus ol{margin:0;padding-left:20px;font-size:13px;line-height:1.7}
-.tv{position:fixed;inset:0;z-index:60;background:#07080b;display:none;flex-direction:column;overflow:hidden}
-.tv.show{display:flex}
-.tv-fundo{position:absolute;inset:-40px;background:center/cover;filter:blur(40px) brightness(.28) saturate(1.3);transition:background-image .3s}
-.tv-topo{position:relative;z-index:1;display:flex;align-items:center;gap:28px;padding:26px 48px 18px}
-.tv-topo h1{margin:0;font-size:26px;white-space:nowrap}
-.tv-info{flex:1;min-width:0}
-.tv-info b{display:block;font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tv-info small{font-size:16px;color:rgba(255,255,255,.7)}
-.tv-dicas{display:flex;gap:16px;font-size:14px;color:rgba(255,255,255,.65);white-space:nowrap}
-.tv-dicas b{display:inline-block;background:rgba(255,255,255,.14);border-radius:6px;padding:1px 7px;margin-right:4px;color:#fff;font-size:12.5px}
-.tv-topo .x{position:static;flex:none}
-.tv-grade{position:relative;z-index:1;flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:30px 26px;padding:18px 48px 48px;align-content:start;scrollbar-width:none}
-.tv-card{cursor:pointer;border-radius:12px;transition:transform .15s}
-.tv-capa{aspect-ratio:2/3;border-radius:12px;background:center/cover;box-shadow:0 10px 30px rgba(0,0,0,.5);display:flex;align-items:flex-end;padding:14px;font-size:18px;font-weight:600;outline:4px solid transparent;outline-offset:4px}
-.tv-card.on{transform:scale(1.07)}
-.tv-card.on .tv-capa{outline-color:var(--accent)}
-.tv-vazio{color:rgba(255,255,255,.6);font-size:20px}
-@media (max-width:900px){.tv-dicas{display:none}.tv-topo,.tv-grade{padding-left:16px;padding-right:16px}}
-.aviso-atu{display:none;flex:none;align-items:center;gap:12px;padding:9px 22px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(229,160,13,.14),transparent);font-size:13.5px}
-.aviso-atu.show{display:flex}
-.aviso-atu > span:first-child{color:var(--accent2);font-size:16px}
-.aviso-atu > div{flex:1}
 .parecidas{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .parecidas .btn{display:flex;flex-direction:column;gap:6px;align-items:stretch;padding:8px;height:auto;text-align:left;white-space:normal}
-.parecidas img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px}
-.situacoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.situacoes button{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:4px 11px;font-size:12.5px;cursor:pointer}
-.situacoes button:hover{color:var(--text)}
-.situacoes button.on{border-color:var(--accent);color:var(--accent2);background:rgba(255,255,255,.04)}
-textarea.nota{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:13.5px;line-height:1.5}
-.sessoes{list-style:none;margin:0;padding:0;font-size:13px;color:var(--muted)}
-.sessoes li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line)}
-.sessoes li span{color:var(--text)}
-.tfontes{display:flex;gap:4px;flex:none}
-.tfontes .btn.on{border-color:var(--accent);color:var(--accent2)}
-.tl-lado .tfontes{justify-content:center;margin-top:12px;flex-wrap:wrap}
-.tl-letra p.vazia{min-height:1em}
-.tl-texto{font-size:21px;line-height:1.6;white-space:pre-line;color:rgba(255,255,255,.88);max-width:820px;font-weight:600}
-.tl-aviso{max-width:520px;color:var(--muted);font-size:16px;line-height:1.6;margin-top:10vh}
-.tl-aviso b{color:var(--text);display:block;font-size:20px;margin-bottom:6px}
-.tl-aviso .btn{margin-top:16px}
-.tl-credito{margin-top:28px;color:var(--dim);font-size:12.5px}
+.parecidas img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:3px}
+
+/* ---------- modo TV (sempre escuro, à distância) ---------- */
+.tv{position:fixed;inset:0;z-index:60;background:#070605;color:#ede9e2;display:none;flex-direction:column;overflow:hidden}
+.tv.show{display:flex}
+.tv-fundo{position:absolute;inset:-40px;background:center/cover;filter:blur(40px) brightness(.26) saturate(1.2);transition:background-image .3s}
+.tv-topo{position:relative;z-index:1;display:flex;align-items:center;gap:28px;padding:30px 52px 20px}
+.tv-topo h1{margin:0;font-family:var(--f-tit);font-size:30px;font-weight:600;white-space:nowrap}
+.tv-info{flex:1;min-width:0}
+.tv-info b{display:block;font-family:var(--f-tit);font-size:26px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-info small{font-size:16px;color:rgba(255,255,255,.7)}
+.tv-dicas{display:flex;gap:16px;font-size:14px;color:rgba(255,255,255,.65);white-space:nowrap}
+.tv-dicas b{display:inline-block;background:rgba(255,255,255,.14);border-radius:4px;padding:1px 7px;margin-right:4px;color:#fff;font-size:12.5px;font-family:var(--f-rot)}
+.tv-topo .x{position:static;flex:none}
+.tv-grade{position:relative;z-index:1;flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:32px 28px;padding:18px 52px 52px;align-content:start;scrollbar-width:none}
+.tv-card{cursor:pointer;border-radius:4px;transition:transform .18s cubic-bezier(.2,.7,.3,1)}
+.tv-capa{aspect-ratio:2/3;border-radius:4px;background:center/cover;box-shadow:0 14px 30px -10px rgba(0,0,0,.7);display:flex;align-items:flex-end;padding:14px;font-family:var(--f-tit);font-size:19px;font-weight:600;outline:3px solid transparent;outline-offset:5px}
+.tv-card.on{transform:scale(1.06)}
+.tv-card.on .tv-capa{outline-color:var(--accent)}
+.tv-vazio{color:rgba(255,255,255,.6);font-size:20px}
+
+/* ---------- aviso de versão nova ---------- */
+.aviso-atu{display:none;flex:none;align-items:center;gap:12px;padding:10px 40px;background:var(--accent-bg);font-size:13.5px}
+.aviso-atu.show{display:flex}
+.aviso-atu > span:first-child{width:7px;height:7px;border-radius:50%;background:var(--accent);font-size:0;flex:none}
+.aviso-atu > div{flex:1}
+
+/* ---------- aparência (configurações) ---------- */
+.temas{display:inline-flex;border-radius:var(--r);overflow:hidden;background:var(--panel2)}
+.temas button{border:0;background:none;padding:8px 14px;font-size:13.5px;color:var(--muted)}
+.temas button + button{box-shadow:inset 1px 0 0 var(--line)}
+.temas button:hover{color:var(--text)}
+.temas button.on{background:var(--text);color:var(--bg);font-weight:600}
+
+@media (max-width:1100px){
+  .destaque{grid-template-columns:1fr}
+  .d-lado{border-top:1px solid var(--line)}
+}
 @media (max-width:820px){
+  aside{display:none}
+  .top{padding:12px 16px;flex-wrap:wrap}
+  .content{padding:10px 16px 90px}
+  .outra-busca{padding:2px 16px 12px}
+  .aviso-atu{padding:10px 16px}
+  .tocando{padding:10px 16px}
+  .size{display:none}
+  :root{--card:132px}
+  .head h1{font-size:28px}
+  .d-palco{flex-direction:column;align-items:flex-start;padding:22px}
+  .d-capa{width:110px}
+  .d-tit{font-size:28px}
+  .hero{flex-direction:column;padding:28px 20px 22px}
+  .hero .cover{width:120px}
+  .sec{padding:18px 20px}
+  .upd-box{margin:0 20px 6px}
   .tela-letra{flex-direction:column;overflow-y:auto}
   .tl-lado{width:100%;padding:48px 20px 10px}
   .tl-capa{width:160px;margin:0 auto 12px}
   .tl-letra{padding:20px 20px 40vh;overflow:visible}
-  .tl-letra p{font-size:21px}
+  .tl-letra p{font-size:22px}
 }
-
-@media (max-width:820px){
-  aside{display:none}
-  .top{padding:12px 16px;flex-wrap:wrap}
-  .content{padding:18px 16px 90px}
-  .size{display:none}
-  :root{--card:130px}
-}
+@media (max-width:700px){.est .stats{grid-template-columns:repeat(2,1fr);gap:0 18px}}
+@media (max-width:900px){.tv-dicas{display:none}.tv-topo,.tv-grade{padding-left:16px;padding-right:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.8v14.4a1 1 0 0 0 1.52.85l11.5-7.2a1 1 0 0 0 0-1.7L8.52 3.95A1 1 0 0 0 7 4.8Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-ler" viewBox="0 0 24 24"><path d="M3.5 5.5h5a3.5 3.5 0 0 1 3.5 3.5v10a2.5 2.5 0 0 0-2.5-2.5h-6z"/><path d="M20.5 5.5h-5A3.5 3.5 0 0 0 12 9v10a2.5 2.5 0 0 1 2.5-2.5h6z"/></symbol>
+  <symbol id="i-estrela" viewBox="0 0 24 24"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
+  <symbol id="i-mais" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+  <symbol id="i-ajustes" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1.5"/><path d="M8 20.5h8"/></symbol>
+  <symbol id="i-pasta" viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h3.8l2 2.2h7.2a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-fechar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-capas-p" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></symbol>
+  <symbol id="i-capas-g" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/></symbol>
+</defs></svg>
+
 <aside>
   <div class="brand">
-    <div class="logo"><svg viewBox="0 0 24 24" fill="#16120a"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="4" width="4" height="16" rx="1"/><rect x="15" y="5" width="4" height="15" rx="1" transform="rotate(12 17 12)"/></svg></div>
+    <div class="logo"><svg viewBox="0 0 26 26" aria-hidden="true"><rect x="4" y="4" width="3.4" height="18" fill="currentColor"/><rect x="9.6" y="7" width="3.4" height="15" fill="currentColor"/><rect x="16.2" y="3.6" width="3.4" height="18.6" fill="var(--accent)" transform="rotate(14 17.9 22.2)"/></svg></div>
     Estante
   </div>
-  <div class="shelves" id="shelves">
-    <button data-e="jogos" onclick="trocarEstante('jogos')" title="Seus jogos">🎮 Jogos</button>
-    <button data-e="leitura" onclick="trocarEstante('leitura')" title="O que você lê">📖 Leitura</button>
+  <div class="shelves" id="shelves" role="tablist" aria-label="Estantes">
+    <button data-e="jogos" onclick="trocarEstante('jogos')" title="Seus jogos">Jogos</button>
+    <button data-e="leitura" onclick="trocarEstante('leitura')" title="O que você lê">Leitura</button>
   </div>
   <nav class="nav" id="nav"></nav>
-  <div class="side-foot"><button class="item" onclick="openSettings()"><span class="ic">⚙</span>Configurações</button></div>
+  <div class="side-foot"><button class="item" onclick="openSettings()"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-ajustes"/></svg></span>Configurações</button></div>
 </aside>
 
 <main>
   <div class="top">
     <div class="search">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" placeholder="Buscar na estante…" autocomplete="off">
+      <svg class="i" aria-hidden="true"><use href="#i-busca"/></svg>
+      <input id="q" placeholder="Buscar na estante…" autocomplete="off" aria-label="Buscar">
     </div>
     <div class="spacer"></div>
-    <select class="sel" id="sort" title="Ordenar">
+    <select class="sel" id="sort" title="Ordenar" aria-label="Ordenar">
       <option value="name">Nome (A–Z)</option>
       <option value="recent">Jogados por último</option>
       <option value="time">Mais tempo jogado</option>
       <option value="added">Adicionados por último</option>
       <option value="year">Ano</option>
     </select>
-    <label class="size" title="Tamanho das capas">▫<input type="range" id="size" min="120" max="260" value="170">▣</label>
-    <button class="btn" id="tvBtn" onclick="abrirTV()" title="Modo TV: capas grandes, para usar com controle de videogame (ou as setas, Enter e Esc)">📺</button>
-    <button class="btn" id="sortearBtn" onclick="sortear()" title="Sorteia um entre os que estão na tela, respeitando a busca e o filtro">🎲 Sortear</button>
-    <button class="btn" id="selBtn" onclick="toggleSelect()">Selecionar</button>
+    <label class="size" title="Tamanho das capas"><svg class="i" aria-hidden="true"><use href="#i-capas-p"/></svg><input type="range" id="size" min="120" max="260" value="170" aria-label="Tamanho das capas"><svg class="i" aria-hidden="true"><use href="#i-capas-g"/></svg></label>
+    <button class="btn ghost icone" id="tvBtn" onclick="abrirTV()" title="Modo TV: capas grandes, para usar com controle de videogame (ou as setas, Enter e Esc)" aria-label="Modo TV"><svg class="i" aria-hidden="true"><use href="#i-tv"/></svg></button>
+    <button class="btn ghost" id="sortearBtn" onclick="sortear()" title="Sorteia um entre os que estão na tela, respeitando a busca e o filtro">Sortear</button>
+    <button class="btn ghost" id="selBtn" onclick="toggleSelect()">Selecionar</button>
     <div class="dd">
-      <button class="btn primary" onclick="toggleMenu(event)">＋ Adicionar</button>
+      <button class="btn primary" onclick="toggleMenu(event)" aria-haspopup="true"><svg class="i" aria-hidden="true"><use href="#i-mais"/></svg>Adicionar</button>
       <div class="menu" id="addMenu">
         <button onclick="openScan()">📁 Escanear uma pasta<small>Acha os jogos de uma pasta inteira</small></button>
         <button onclick="openManual()">🎮 Adicionar um jogo<small>Escolha o executável de um jogo</small></button>
@@ -492,8 +691,8 @@ textarea.nota{width:100%;min-height:76px;resize:vertical;font:inherit;font-size:
   <b id="bulkN">0 selecionados</b>
   <button class="btn" onclick="bulkCollection()">Pôr em coleção</button>
   <button class="btn" id="bulkRemoveTag" onclick="bulkRemoveTag()">Tirar desta coleção</button>
-  <button class="btn" onclick="bulkFav()">★ Favoritar</button>
-  <button class="btn" id="bulkJoin" onclick="bulkJoin()" title="Para o mesmo jogo que você tem em lojas diferentes">⧉ Juntar em um só</button>
+  <button class="btn" onclick="bulkFav()">Favoritar</button>
+  <button class="btn" id="bulkJoin" onclick="bulkJoin()" title="Para o mesmo jogo que você tem em lojas diferentes">Juntar em um só</button>
   <button class="btn" id="bulkHide" onclick="bulkHide()">Ocultar</button>
   <button class="btn ghost" onclick="toggleSelect(false)">Cancelar</button>
 </div>
@@ -512,7 +711,7 @@ const S = {games: [], view: {type: 'all'}, q: '', sort: 'name', selecting: false
 const LOJA = {
   steam: {n: 'Steam', c: '#66c0f4'}, epic: {n: 'Epic Games', curto: 'Epic', c: '#cfd3da'}, gog: {n: 'GOG', c: '#b46fe8'},
   ea: {n: 'EA app', curto: 'EA', c: '#ff5a5a'}, ubisoft: {n: 'Ubisoft Connect', curto: 'Ubisoft', c: '#4d8dff'},
-  battlenet: {n: 'Battle.net', c: '#29a8ff'}, xbox: {n: 'Xbox', c: '#52b043'}, '': {n: 'Sem loja', c: '#e5a00d'}
+  battlenet: {n: 'Battle.net', c: '#29a8ff'}, xbox: {n: 'Xbox', c: '#52b043'}, '': {n: 'Sem loja', c: '#a39d92'}
 };
 const ORDEM_LOJAS = ['steam', 'epic', 'gog', 'ea', 'ubisoft', 'battlenet', 'xbox', ''];
 const lojaDe = k => LOJA[k || ''] || LOJA[''];
@@ -533,6 +732,8 @@ const pref = {
 S.estante = store.get('estante', 'jogos') === 'leitura' ? 'leitura' : 'jogos';
 S.sort = store.get(S.estante === 'leitura' ? 'sort_leitura' : 'sort', 'name');
 const $ = id => document.getElementById(id);
+const ic = (n, cls) => `<svg class="i${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const xBtn = (fn, rot) => `<button class="x" onclick="${fn}" aria-label="${rot || 'Fechar'}" title="${rot || 'Fechar'}">${ic('fechar')}</button>`;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const jsArg = s => esc(JSON.stringify(s));
 
@@ -662,7 +863,7 @@ function colecoesHTML(tags) {
     const on = S.view.type === 'tag' && S.view.tag === t;
     return `<div class="col-item" style="padding-left:${nivel * 14}px">
       ${subs.length ? `<button class="caret${aberta ? ' aberta' : ''}" title="${aberta ? 'Fechar' : 'Abrir'}" onclick="togColecao(${jsArg(t)})">▸</button>` : '<span class="caret"></span>'}
-      <button class="item${on ? ' on' : ''}" onclick="go('tag', ${jsArg(t)})" title="${esc(t)}${daPasta(t) ? ' · segue as pastas' : ''}"><span class="ic">${daPasta(t) ? '📁' : '▤'}</span>${esc(t.split('/').pop())}<span class="n">${n}</span></button></div>`
+      <button class="item${on ? ' on' : ''}" onclick="go('tag', ${jsArg(t)})" title="${esc(t)}${daPasta(t) ? ' · segue as pastas' : ''}"><span class="ic">${daPasta(t) ? ic('pasta') : ''}</span>${esc(t.split('/').pop())}<span class="n">${n}</span></button></div>`
       + (subs.length && aberta ? subs.map(item).join('') : '');
   };
   return tags.filter(([t]) => !t.includes('/')).map(item).join('');
@@ -704,7 +905,8 @@ function visible() {
 function navItem(type, label, icon, count, tag) {
   const on = S.view.type === type && (tag === undefined || S.view.tag === tag);
   const arg = tag !== undefined ? `'${type}', ${jsArg(tag)}` : `'${type}'`;
-  return `<button class="item${on ? ' on' : ''}" onclick="go(${arg})"><span class="ic">${icon}</span>${esc(label)}<span class="n">${count}</span></button>`;
+  const marca = String(icon).startsWith('<span class="dot"') || String(icon).startsWith('<svg') ? icon : '';
+  return `<button class="item${on ? ' on' : ''}" onclick="go(${arg})"><span class="ic">${marca}</span>${esc(label)}<span class="n">${count}</span></button>`;
 }
 function renderNav() {
   if (S.estante === 'leitura') return renderNavLeitura();
@@ -722,9 +924,9 @@ function renderNav() {
     navItem('hidden', 'Ocultos', '◐', S.games.filter(g => g.hidden).length) +
     navSituacoes(shown) +
     navLojas(shown) +
-    `<h4>Coleções <button title="Nova coleção" onclick="newCollection()">＋</button></h4>` +
+    `<h4>Coleções <button title="Nova coleção" aria-label="Nova coleção" onclick="newCollection()">${ic('mais')}</button></h4>` +
     (tags.length ? colecoesHTML(tags)
-      : `<div class="empty-tags">Nenhuma coleção ainda. Clique no ＋ ou use “Selecionar” para juntar vários jogos de uma vez.</div>`);
+      : `<div class="empty-tags">Nenhuma coleção ainda. Clique no + ou use “Selecionar” para juntar vários jogos de uma vez.</div>`);
   $('tagList').innerHTML = tags.map(([t]) => `<option value="${esc(t)}">`).join('');
 }
 // a sua situação em cada jogo; a seção só aparece quando algum jogo tem uma
@@ -742,27 +944,63 @@ function navLojas(shown) {
   if (!comJogos.some(k => k)) return '';
   return `<h4>Lojas</h4>` + comJogos.map(k => navItem('loja', lojaDe(k).n, dot(k), cont(k), k)).join('');
 }
-function lojaTag(g) {
-  const ls = (g.lojas || []).filter((k, i, a) => a.indexOf(k) === i);
-  if (!ls.length || (ls.length === 1 && !ls[0])) return '';
-  const k = ls[0] || ls[1];
-  const extra = ls.length > 1 ? ' +' + (ls.length - 1) : '';
-  return `<div class="lojatag" title="${esc(ls.map(x => lojaDe(x).n).join(', '))}">${dot(k)}${esc(lojaDe(k).curto || lojaDe(k).n)}${extra}</div>`;
+function lojaTxt(g) {
+  const ls = (g.lojas || []).filter((k, i, a) => a.indexOf(k) === i && k);
+  if (!ls.length) return '';
+  return esc(lojaDe(ls[0]).curto || lojaDe(ls[0]).n) + (ls.length > 1 ? ' +' + (ls.length - 1) : '');
 }
+const sepTxt = partes => partes.filter(Boolean).join('<span class="sep">·</span>');
 function cardHTML(g) {
   if (S.estante === 'leitura') return cardSerie(g);
-  const sub = g.running ? '<span style="color:var(--ok)">● Jogando agora</span>' : (fmtShort(g.playtime) || (g.year ? g.year : 'Nunca jogado'));
+  const sub = g.running ? '<span class="vivo">Jogando agora</span>' : sepTxt([lojaTxt(g), fmtShort(g.playtime) || (g.year ? g.year : 'Nunca jogado')]);
+  const lojas = (g.lojas || []).filter(Boolean).map(x => lojaDe(x).n).join(', ');
   return `<div class="card${S.picked.has(g.id) ? ' picked' : ''}" tabindex="0" data-id="${g.id}">
     <div class="cover">${coverHTML(g)}
-      ${g.running ? '<div class="badge live">JOGANDO</div>' : g.missing ? '<div class="badge miss">Arquivo sumiu</div>' : g.has_update ? '<div class="badge upd">NOVA VERSÃO</div>' : ''}
-      ${g.favorite && !S.selecting ? '<div class="fav">★</div>' : ''}
-      ${lojaTag(g)}
-      ${g.wand ? `<div class="wandtag" title="Tem trainer no Wand${g.wand.cheats ? ' (' + g.wand.cheats + ' trapaças)' : ''}">✦ Wand</div>` : ''}
+      ${g.running ? '<div class="badge live">Jogando</div>' : g.missing ? '<div class="badge miss">Arquivo sumiu</div>' : g.has_update ? '<div class="badge upd">Versão nova</div>' : g.wand ? `<div class="badge wandtag" title="Tem trainer no Wand${g.wand.cheats ? ' (' + g.wand.cheats + ' trapaças)' : ''}">Wand</div>` : ''}
+      ${g.favorite && !S.selecting ? `<div class="fav" title="Favorito">${ic('estrela', 'cheio')}</div>` : ''}
       <div class="check"></div>
-      <div class="play"><span data-play="${g.id}" title="Jogar"><svg viewBox="0 0 24 24" fill="#16120a"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.4-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg></span></div>
+      <div class="play"><span data-play="${g.id}" title="Jogar">${ic('play')}Jogar</span></div>
     </div>
-    <div class="meta"><div class="t" title="${esc(g.name)}">${esc(g.name)}</div><div class="s">${sub}</div></div>
+    <div class="meta"><div class="t" title="${esc(g.name)}">${esc(g.name)}</div><div class="s" title="${esc(lojas)}">${sub}</div></div>
   </div>`;
+}
+// o primeiro bloco da estante: o que você está jogando ou lendo agora, grande, e os próximos em lista
+function destaqueHTML(itens, leit) {
+  const [d, ...resto] = itens;
+  const fundo = d.cover_url ? `background-image:url('${esc(d.cover_url)}')` : `background:hsl(${hue(d.name)} 40% 26%)`;
+  let info, num = '', acao;
+  if (leit) {
+    const p = d.proximo_cap || {};
+    num = d.lido_txt ? `<div class="d-num"><small class="pre">cap.</small>${esc(capTxt(d.lido_txt))}${d.disp_txt && d.disp_txt !== d.lido_txt ? `<small>de ${esc(capTxt(d.disp_txt))}</small>` : ''}</div>` : '';
+    info = [d.tipo, d.tem_novo ? `${d.nao_lidos} ${d.nao_lidos === 1 ? 'capítulo novo' : 'capítulos novos'}` : '', d.site_nome, d.ultima_leitura ? 'lido ' + fmtWhen(d.ultima_leitura).toLowerCase() : ''];
+    acao = p.existe === false ? '<span class="d-emdia">Em dia com a série</span>'
+      : `<button class="btn primary" data-ler="${d.id}">${ic('ler')}${p.continuar ? 'Continuar' : 'Ler'} capítulo ${esc(capTxt(p.num))}</button>`;
+  } else {
+    info = [fmtShort(d.playtime), d.last_played ? 'jogado ' + fmtWhen(d.last_played).toLowerCase() : '', (d.lojas || []).filter(Boolean).map(x => lojaDe(x).n)[0]];
+    acao = `<button class="btn primary" data-play="${d.id}" ${d.running ? 'disabled' : ''}>${ic('play')}${d.running ? 'Jogando agora' : 'Jogar'}</button>`;
+  }
+  const linha = x => {
+    const sub = leit ? subSerie(x) : (x.running ? 'Jogando agora' : [fmtShort(x.playtime), fmtWhen(x.last_played)].filter(Boolean).join(' · '));
+    const bt = leit ? ((x.proximo_cap || {}).existe === false ? '' : `<button class="btn sm" data-ler="${x.id}">Ler ${esc(capTxt((x.proximo_cap || {}).num))}</button>`)
+      : `<button class="btn sm" data-play="${x.id}" aria-label="Jogar ${esc(x.name)}" ${x.running ? 'disabled' : ''}>${ic('play')}</button>`;
+    return `<div class="d-item"><button class="d-nome" data-abrir="${x.id}"><span class="cover">${coverHTML(x)}</span><span><b>${esc(x.name)}</b><small>${esc(sub)}</small></span></button>${bt}</div>`;
+  };
+  return `<section class="destaque" aria-label="${leit ? 'Continue lendo' : 'Continue jogando'}">
+    <div class="d-palco"><div class="d-fundo" style="${fundo}"></div>
+      <button class="d-capa" data-abrir="${d.id}" aria-label="Detalhes de ${esc(d.name)}"><div class="cover${leit ? '' : ''}">${coverHTML(d)}</div></button>
+      <div class="d-texto">
+        <div class="d-kick">${leit ? 'Continue lendo' : 'Continue jogando'}</div>
+        <button class="d-tit" data-abrir="${d.id}">${esc(d.name)}</button>
+        ${num}
+        <div class="d-info">${info.filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('')}</div>
+        <div class="d-acts">${acao}<button class="btn ghost" data-abrir="${d.id}">Detalhes</button></div>
+      </div>
+    </div>
+    <div class="d-lado"><h2>${leit ? 'Também lendo' : 'Também jogando'}</h2>
+      ${resto.length ? resto.slice(0, 5).map(linha).join('') : `<p class="hint" style="margin:4px 0 0">${leit ? 'As outras séries que você ler aparecem aqui.' : 'Os outros jogos que você abrir aparecem aqui.'}</p>`}
+      ${resto.length > 5 ? `<div class="d-mais">E mais ${resto.length - 5} ${leit ? 'em Histórico' : 'em Jogados recentemente'}.</div>` : ''}
+    </div>
+  </section>`;
 }
 function viewTitle() {
   const v = S.view;
@@ -778,27 +1016,27 @@ function render() {
   const list = visible();
   let html = '';
   if (!S.games.length) {
-    html = `<div class="blank"><div class="big">🎮</div><h2>Sua estante está vazia</h2>
+    html = `<div class="blank"><div class="kick">Jogos</div><h2>Sua estante está vazia</h2>
       Os jogos instalados pela Steam, Epic, GOG, EA app, Ubisoft Connect, Battle.net e Xbox entram sozinhos. Para os outros, escaneie a pasta onde eles ficam ou adicione um por um escolhendo o executável.
       ${S.hasKey ? '' : '<br><br>Dica: coloque a chave do SteamGridDB nas Configurações para as capas aparecerem sozinhas.'}
-      <div class="acts"><button class="btn primary" onclick="openScan()">📁 Escanear uma pasta</button><button class="btn" onclick="openManual()">🎮 Adicionar um jogo</button>
-      ${S.hasKey ? '' : '<button class="btn" onclick="openSettings()">⚙ Configurar capas</button>'}</div></div>`;
+      <div class="acts"><button class="btn primary" onclick="openScan()">Escanear uma pasta</button><button class="btn" onclick="openManual()">Adicionar um jogo</button>
+      ${S.hasKey ? '' : '<button class="btn ghost" onclick="openSettings()">Configurar capas</button>'}</div></div>`;
   } else {
     html += `<div class="head"><h1>${esc(viewTitle())}</h1><span>${list.length} ${list.length === 1 ? 'jogo' : 'jogos'}</span>
       ${S.view.type === 'tag' ? `<button class="btn ghost" style="margin-left:auto" onclick="renameCollection()">Renomear coleção</button>` : ''}
-      ${S.view.type === 'updates' ? `<button class="btn" style="margin-left:auto" onclick="checkAll()">⟳ Verificar todos agora</button>` : ''}</div>`;
+      ${S.view.type === 'updates' ? `<button class="btn" style="margin-left:auto" onclick="checkAll()">Verificar todos agora</button>` : ''}</div>`;
     if (S.view.type === 'all' && !S.q && !S.selecting && S.repetidos.length) {
       const n = S.repetidos.length;
-      html += `<div class="aviso"><span>⧉</span><div>${n === 1 ? 'Um jogo parece estar' : n + ' jogos parecem estar'} em mais de uma loja. Você pode juntar cada um num só, escolhendo por qual loja ele abre.</div>
+      html += `<div class="aviso"><div>${n === 1 ? 'Um jogo parece estar' : n + ' jogos parecem estar'} em mais de uma loja. Você pode juntar cada um num só, escolhendo por qual loja ele abre.</div>
         <div class="acts"><button class="btn primary" onclick="openRepetidos()">Ver e juntar</button></div></div>`;
     }
     if (S.view.type === 'all' && !S.q && !S.selecting) {
       const recent = S.games.filter(g => !g.hidden && g.last_played).sort((a, b) => b.last_played - a.last_played).slice(0, 8);
-      if (recent.length) html += `<div class="row-title">Continue jogando</div><div class="strip">${recent.map(cardHTML).join('')}</div><div class="row-title">Biblioteca</div>`;
+      if (recent.length) html += destaqueHTML(recent, false) + `<div class="row-title">Biblioteca</div>`;
     }
     html += list.length ? `<div class="grid">${list.map(cardHTML).join('')}</div>`
-      : S.view.type === 'updates' && !S.q ? `<div class="blank"><div class="big">✓</div>Tudo em dia! Nenhum jogo com versão nova.<br><span class="hint">A verificação usa a página salva de cada jogo (como o tópico do F95zone).</span></div>`
-      : `<div class="blank"><div class="big">🔍</div>Nada por aqui${S.q ? ' com essa busca' : ''}.</div>`;
+      : S.view.type === 'updates' && !S.q ? `<div class="blank curto"><h2>Tudo em dia</h2>Nenhum jogo com versão nova.<br><span class="hint">A verificação usa a página salva de cada jogo (como o tópico do F95zone).</span></div>`
+      : `<div class="blank curto"><h2>Nada por aqui</h2>${S.q ? 'Nenhum jogo com “' + esc(S.q.trim()) + '”. Confira a grafia ou procure por loja, gênero ou coleção.' : 'Esta parte da estante ainda está vazia.'}</div>`;
   }
   $('content').innerHTML = html;
   updateBulk();
@@ -869,7 +1107,7 @@ function buscarNaOutra() {
     if (n !== outraN || S.q.trim() !== q) return;   // você continuou digitando
     const el = $('outraBusca');
     el.classList.toggle('show', r.total > 0);
-    el.innerHTML = r.total ? `<span class="rot">${em === 'leitura' ? '📖 Na Leitura' : '🎮 Nos Jogos'}${r.total > r.itens.length ? ' (' + r.total + ')' : ''}:</span>`
+    el.innerHTML = r.total ? `<span class="rot">${em === 'leitura' ? 'Na Leitura' : 'Nos Jogos'}${r.total > r.itens.length ? ' (' + r.total + ')' : ''}:</span>`
       + r.itens.map(x => `<button class="ob" onclick="abrirDaOutra(${jsArg(em)}, ${jsArg(x.id)}, ${jsArg(q)})"><i style="${x.capa ? `background-image:url('${esc(x.capa)}')` : `background:hsl(${hue(x.nome)} 40% 30%)`}"></i>
           <span style="min-width:0"><b>${esc(x.nome)}</b><small>${esc(x.sub)}</small></span></button>`).join('') : '';
   }, 250);
@@ -942,9 +1180,9 @@ function desenharTV() {
   const l = TV.lista, leit = S.estante === 'leitura';
   TV.i = Math.max(0, Math.min(TV.i, l.length - 1));
   $('tv').innerHTML = `<div class="tv-fundo" id="tvFundo"></div>
-    <div class="tv-topo"><h1>${leit ? '📖 Leitura' : '🎮 Jogos'}</h1><div class="tv-info" id="tvInfo"></div>
+    <div class="tv-topo"><h1>${leit ? 'Leitura' : 'Jogos'}</h1><div class="tv-info" id="tvInfo"></div>
       <div class="tv-dicas"><span><b>A</b> ${leit ? 'ler' : 'jogar'}</span><span><b>X</b> sortear</span><span><b>LB RB</b> trocar estante</span><span><b>B</b> sair</span></div>
-      <button class="x" onclick="fecharTV()" title="Sair do modo TV (Esc)">×</button></div>
+      <button class="x" onclick="fecharTV()" title="Sair do modo TV (Esc)">${ic('fechar')}</button></div>
     <div class="tv-grade" id="tvGrade">${l.length ? l.map((x, i) => `<div class="tv-card" data-i="${i}" onclick="TV.i=${i};focoTV();abrirNaTV()">
       <div class="tv-capa" style="${x.cover_url ? `background-image:url('${esc(x.cover_url)}')` : `background:hsl(${hue(x.name)} 40% 28%)`}">${x.cover_url ? '' : `<span>${esc(x.name)}</span>`}</div></div>`).join('')
       : `<div class="tv-vazio">Nada para mostrar aqui.</div>`}</div>`;
@@ -1215,19 +1453,19 @@ function renderDrawer() {
   $('drawer').innerHTML = `
     <div class="hero">
       <div class="bgimg" style="${g.cover_url ? `background-image:url('${esc(g.cover_url)}')` : `background:hsl(${hue(g.name)} 40% 25%)`}"></div>
-      <button class="x" onclick="closeDrawer()">×</button>
+      ${xBtn('closeDrawer()')}
       <div class="cover">${coverHTML(g)}</div>
       <div style="min-width:0">
         <div class="yr">${g.year || '&nbsp;'}</div>
         <h2>${esc(g.name)}</h2>
         ${g.developer ? `<div class="dev">por ${esc(g.developer)}</div>` : ''}
         ${infoPills(g)}
-        ${g.running ? '<div style="color:var(--ok);font-weight:600">● Jogando agora</div>' : ''}
-        ${g.missing ? '<div style="color:#ff8a8d;font-size:13px">Não encontrei o arquivo do jogo. Corrija o caminho em Editar.</div>' : ''}
+        ${g.running ? '<div style="color:#8fd8a8;font-weight:600;margin-top:6px">Jogando agora</div>' : ''}
+        ${g.missing ? '<div style="color:#ffa49c;font-size:13px;margin-top:6px">Não encontrei o arquivo do jogo. Corrija o caminho em Editar.</div>' : ''}
         <div class="acts">
-          <button class="btn primary" onclick="play('${g.id}')" ${g.running ? 'disabled' : ''}>▶ Jogar</button>
-          ${g.wand && !g.pelo_wand ? `<button class="btn" onclick="play('${g.id}', undefined, true)" ${g.running ? 'disabled' : ''} title="Abre o jogo pelo Wand, já com o trainer">✦ Jogar com Wand</button>` : ''}
-          <button class="btn${g.favorite ? ' on' : ''}" onclick="togFav()">${g.favorite ? '★ Favorito' : '☆ Favoritar'}</button>
+          <button class="btn primary" onclick="play('${g.id}')" ${g.running ? 'disabled' : ''}>${ic('play')}Jogar</button>
+          ${g.wand && !g.pelo_wand ? `<button class="btn" onclick="play('${g.id}', undefined, true)" ${g.running ? 'disabled' : ''} title="Abre o jogo pelo Wand, já com o trainer">Jogar com Wand</button>` : ''}
+          <button class="btn${g.favorite ? ' on' : ''}" onclick="togFav()" aria-pressed="${!!g.favorite}">${ic('estrela', g.favorite ? 'cheio' : '')}${g.favorite ? 'Favorito' : 'Favoritar'}</button>
         </div>
         <div class="situacoes" title="A sua situação neste jogo">${SITUACOES.map(([k, n]) =>
           `<button class="${g.situacao === k ? 'on' : ''}" onclick="trocarSituacao('${k}')">${n}</button>`).join('')}</div>
@@ -1253,18 +1491,18 @@ function renderDrawer() {
     ${wandHTML(g)}
     ${fontesHTML(g)}
     <div class="sec"><h3>Coleções</h3>
-      <div class="chips">${g.tags.map(t => `<span class="chip" title="${t === g.colecao_pasta ? 'Segue a pasta do jogo' : ''}">${t === g.colecao_pasta ? '📁 ' : ''}${esc(t.split('/').join(' › '))}<button title="Tirar" onclick="rmTag(${jsArg(t)})">×</button></span>`).join('')}
-      <input id="tagIn" list="tagList" placeholder="＋ adicionar a uma coleção" onkeydown="if(event.key==='Enter')addTag()" onchange="addTag()"></div></div>
+      <div class="chips">${g.tags.map(t => `<span class="chip" title="${t === g.colecao_pasta ? 'Segue a pasta do jogo' : ''}">${t === g.colecao_pasta ? ic('pasta') + ' ' : ''}${esc(t.split('/').join(' › '))}<button title="Tirar" onclick="rmTag(${jsArg(t)})">×</button></span>`).join('')}
+      <input id="tagIn" list="tagList" placeholder="+ adicionar a uma coleção" onkeydown="if(event.key==='Enter')addTag()" onchange="addTag()"></div></div>
     ${g.loja ? (g.pasta_jogo ? `<div class="sec"><h3>Pasta do jogo</h3><div class="path">${esc(g.pasta_jogo)}</div></div>` : '')
       : `<div class="sec"><h3>Arquivo do jogo</h3><div class="path">${esc(g.exe)}${g.args ? ' ' + esc(g.args) : ''}</div></div>`}
     <div class="sec toggles">
-      <button class="btn" onclick="openLink('${g.id}')">🔗 Buscar dados pelo link</button>
-      ${g.url ? `<a class="btn" href="${esc(g.url)}" target="_blank" rel="noopener" style="text-decoration:none">🌐 Página do jogo</a>` : ''}
-      ${g.url && !g.loja ? `<button class="btn" id="chkBtn" onclick="checkOne('${g.id}')">⟳ Verificar atualização</button>` : ''}
-      <button class="btn" onclick="openCovers('${g.id}')">🖼 Trocar capa</button>
-      <button class="btn" onclick="openEdit('${g.id}')">✎ Editar</button>
-      <button class="btn" onclick="openFolder('${g.id}')">📂 Abrir pasta</button>
-      <button class="btn" onclick="openJuntarCom('${g.id}')">⧉ Juntar com outro jogo</button>
+      <button class="btn" onclick="openLink('${g.id}')">Buscar dados pelo link</button>
+      ${g.url ? `<a class="btn" href="${esc(g.url)}" target="_blank" rel="noopener" style="text-decoration:none">Página do jogo</a>` : ''}
+      ${g.url && !g.loja ? `<button class="btn" id="chkBtn" onclick="checkOne('${g.id}')">Verificar atualização</button>` : ''}
+      <button class="btn" onclick="openCovers('${g.id}')">Trocar capa</button>
+      <button class="btn" onclick="openEdit('${g.id}')">Editar</button>
+      <button class="btn" onclick="openFolder('${g.id}')">Abrir pasta</button>
+      <button class="btn" onclick="openJuntarCom('${g.id}')">Juntar com outro jogo</button>
       <button class="btn" onclick="togHide()">${g.hidden ? 'Mostrar na estante' : 'Ocultar'}</button>
     </div>`;
 }
@@ -1274,7 +1512,7 @@ function wandHTML(g) {
     <p class="hint" style="margin-top:0">O Wand tem trainer para este jogo${g.wand.cheats ? ', com ' + g.wand.cheats + ' trapaças' : ''}.</p>
     <div class="loja-row" style="margin-bottom:10px"><div class="q"><b>Jogar sempre pelo Wand</b><small>O botão Jogar abre o jogo pelo Wand, já com o trainer. O tempo jogado continua contando.</small></div>
       <label class="sw" title="${g.pelo_wand ? 'Desligar' : 'Ligar'}"><input type="checkbox" ${g.pelo_wand ? 'checked' : ''} onchange="togPeloWand(this.checked)"><span></span></label></div>
-    <button class="btn" onclick="verNoWand('${g.id}')">✦ Ver no Wand</button></div>`;
+    <button class="btn" onclick="verNoWand('${g.id}')">Ver no Wand</button></div>`;
 }
 async function togPeloWand(on) {
   await patch(S.open, {pelo_wand: on}); render(); renderDrawer();
@@ -1287,7 +1525,7 @@ function fontesHTML(g) {
   return `<div class="sec"><h3>Onde você tem este jogo</h3><div class="fontes">${fs.map((f, i) => `
     <div class="fonte"><div class="q"><b>${dot(f.loja)}${esc(f.nome_loja)}${i ? '' : ' <span class="principal">abre por aqui</span>'}</b>
       ${f.nome && f.nome !== g.name && f.nome !== 'Arquivo do jogo' ? `<small>${esc(f.nome)}</small>` : ''}</div>
-      ${i ? `<button class="btn" onclick="play('${g.id}', ${i - 1})" ${g.running ? 'disabled' : ''}>▶ Abrir por aqui</button>
+      ${i ? `<button class="btn" onclick="play('${g.id}', ${i - 1})" ${g.running ? 'disabled' : ''}>${ic('play')}Abrir por aqui</button>
         <button class="btn ghost" onclick="fontePrincipal(${i - 1})" title="Clicar em Jogar passa a abrir por aqui">Usar como padrão</button>
         <button class="btn ghost" onclick="separar(${i - 1})" title="Volta a ser um jogo separado na estante">Separar</button>` : ''}
     </div>`).join('')}</div></div>`;
@@ -1305,7 +1543,7 @@ async function separar(i) {
 function infoPills(g) {
   const p = [];
   if (g.loja) p.push(`<span class="pill loja">${dot(g.loja)}${esc(lojaDe(g.loja).n)}</span>`);
-  if (g.wand) p.push('<span class="pill wand" title="Tem trainer no Wand">✦ Trainer no Wand</span>');
+  if (g.wand) p.push('<span class="pill wand" title="Tem trainer no Wand">Trainer no Wand</span>');
   if (g.version) p.push(`<span class="pill" title="Versão que você tem">${esc(g.version)}</span>`);
   if (g.engine) p.push(`<span class="pill">${esc(g.engine)}</span>`);
   if (g.status) p.push(`<span class="pill st-${esc(g.status.split(' ')[0])}">${esc(g.status)}</span>`);
@@ -1354,7 +1592,7 @@ function sortear() {
   const x = l[Math.floor(Math.random() * l.length)];
   ultimoSorteado = x.id;
   openDrawer(x.id);
-  toast('🎲 Que tal ' + (S.estante === 'leitura' ? 'ler' : 'jogar') + ' “' + x.name + '”?');
+  toast('Que tal ' + (S.estante === 'leitura' ? 'ler' : 'jogar') + ' “' + x.name + '”?');
 }
 async function trocarSituacao(k) {
   const g = byId(S.open); if (!g) return;
@@ -1384,7 +1622,7 @@ async function openFolder(id) { try { await api(`/api/games/${id}/open-folder`, 
 function openModal(html, wide) { $('modal').className = 'modal' + (wide ? ' wide' : ''); $('modal').innerHTML = html; $('modalWrap').classList.add('show'); }
 function closeModal() { $('modalWrap').classList.remove('show'); $('modal').innerHTML = ''; }
 $('modalWrap').addEventListener('mousedown', e => { if (e.target === $('modalWrap')) closeModal(); });
-const head = t => `<header><h2>${t}</h2><button class="x" onclick="closeModal()">×</button></header>`;
+const head = t => `<header><h2>${t}</h2><button class="x" onclick="closeModal()" aria-label="Fechar">${ic('fechar')}</button></header>`;
 
 async function pick(kind, target) {
   try {
@@ -1451,11 +1689,11 @@ async function runScan() {
         <input type="checkbox" id="sc${i}" ${r.already || r.antiga ? 'disabled' : 'checked'} onchange="scanCount()">
         <input class="inp" id="sn${i}" value="${esc(r.name)}" ${r.already || r.antiga ? 'disabled' : ''}>
         <select id="se${i}" ${r.already || r.antiga ? 'disabled' : ''} title="Executável">${r.alternatives.map(a => `<option value="${esc(a)}">${esc(a.split(/[\\/]/).slice(-2).join(' › '))}</option>`).join('')}</select>
-        ${r.colecao ? `<small class="hint">📁 ${esc(r.colecao.split('/').join(' › '))}</small>` : ''}
+        ${r.colecao ? `<small class="hint">${esc(r.colecao.split('/').join(' › '))}</small>` : ''}
         ${r.antiga ? '<small>Versão mais antiga: fica a mais nova</small>' : r.already ? '<small>Já está na estante</small>' : r.meta ? `<small class="tag-itch">✓ Instalado pelo itch.io: capa e dados${r.meta.developer ? ' de ' + esc(r.meta.developer) : ''} vêm junto</small>` : ''}
       </div>`).join('')}</div>`;
     $('sFoot').style.display = ''; scanCount();
-  } catch (e) { $('sOut').innerHTML = `<p class="hint" style="color:#ff8a8d;margin-top:16px">${esc(e.message)}</p>`; }
+  } catch (e) { $('sOut').innerHTML = `<p class="hint" style="color:var(--err);margin-top:16px">${esc(e.message)}</p>`; }
 }
 function scanCount() {
   const n = scanRes.filter((_, i) => $('sc' + i).checked).length;
@@ -1514,10 +1752,10 @@ function openCovers(id) {
   openModal(head('Trocar capa') + `<div class="body">
     ${S.hasKey ? `<div class="inline"><input class="inp" id="cq" value="${esc(g.name)}"><button class="btn primary" onclick="coverSearch('${id}')">Buscar</button></div>
       <div id="cMatches" class="matches"></div><div id="cGrid"></div>`
-      : `<p class="hint" style="margin-top:0">Para buscar capas na internet, coloque sua chave do SteamGridDB nas Configurações.</p><button class="btn" onclick="openSettings()">⚙ Abrir Configurações</button>`}
+      : `<p class="hint" style="margin-top:0">Para buscar capas na internet, coloque sua chave do SteamGridDB nas Configurações.</p><button class="btn" onclick="openSettings()">Abrir Configurações</button>`}
   </div><footer><div class="left">Ou use uma imagem sua, ou a da página do jogo</div>
-    <button class="btn" onclick="openLink('${id}')">🔗 Pegar do link</button>
-    <label class="btn">📁 Escolher imagem do PC<input type="file" accept="image/*" hidden onchange="uploadCover('${id}', this)"></label></footer>`, true);
+    <button class="btn" onclick="openLink('${id}')">Pegar do link</button>
+    <label class="btn">Escolher imagem do PC<input type="file" accept="image/*" hidden onchange="uploadCover('${id}', this)"></label></footer>`, true);
   if (S.hasKey) { $('cq').onkeydown = e => { if (e.key === 'Enter') coverSearch(id); }; coverSearch(id); }
 }
 async function coverSearch(id) {
@@ -1528,7 +1766,7 @@ async function coverSearch(id) {
     $('cMatches').innerHTML = res.map((r, i) => `<button class="match${i ? '' : ' on'}" data-sg="${r.id}">${esc(r.name)}${r.year ? ' (' + r.year + ')' : ''}</button>`).join('');
     $('cMatches').onclick = e => { const b = e.target.closest('.match'); if (!b) return; $('cMatches').querySelectorAll('.match').forEach(x => x.classList.toggle('on', x === b)); coverOptions(id, b.dataset.sg); };
     coverOptions(id, res[0].id);
-  } catch (e) { $('cGrid').innerHTML = `<p class="hint" style="color:#ff8a8d">${esc(e.message)}</p>`; }
+  } catch (e) { $('cGrid').innerHTML = `<p class="hint" style="color:var(--err)">${esc(e.message)}</p>`; }
 }
 async function coverOptions(id, sg) {
   $('cGrid').innerHTML = '<div class="spin"></div>';
@@ -1542,7 +1780,7 @@ async function coverOptions(id, sg) {
       try { await api(`/api/games/${id}/cover`, {method: 'POST', body: {url: b.dataset.url}}); closeModal(); S.lastJson = ''; await load(); toast('Capa trocada!'); }
       catch (err) { toast(err.message, true); coverOptions(id, sg); }
     };
-  } catch (e) { $('cGrid').innerHTML = `<p class="hint" style="color:#ff8a8d">${esc(e.message)}</p>`; }
+  } catch (e) { $('cGrid').innerHTML = `<p class="hint" style="color:var(--err)">${esc(e.message)}</p>`; }
 }
 async function uploadCover(id, input) {
   const f = input.files[0]; if (!f) return;
@@ -1569,7 +1807,7 @@ function openLink(id) {
       linkMeta = m;
       const imgs = m.images || (m.image ? [m.image] : []);
       const prox = u => '/api/img?u=' + encodeURIComponent(u) + '&r=' + encodeURIComponent(m.url || '');
-      $('lOut').innerHTML = `${m.warning ? `<p class="hint" style="color:#ffb35c;margin:14px 0 0">${esc(m.warning)}</p>` : ''}
+      $('lOut').innerHTML = `${m.warning ? `<p class="hint" style="color:var(--warn);margin:14px 0 0">${esc(m.warning)}</p>` : ''}
         <div class="preview">${imgs.length ? `<img id="lImg" src="${esc(prox(m.image))}" alt="">` : ''}
         <div style="min-width:0;flex:1">
           <label class="f" style="margin-bottom:8px"><span>Nome</span><input class="inp" id="lTitle" value="${esc(m.title || '')}" placeholder="Nome do jogo"></label>
@@ -1602,7 +1840,7 @@ function openLink(id) {
     } catch (e) {
       if (meu !== linkReq) return;
       $('lFoot').style.display = 'none';
-      $('lOut').innerHTML = `<p class="hint" style="color:#ff8a8d;margin-top:16px">${esc(e.message)}</p>`;
+      $('lOut').innerHTML = `<p class="hint" style="color:var(--err);margin-top:16px">${esc(e.message)}</p>`;
     }
   };
   $('lGo').onclick = go;
@@ -1621,7 +1859,18 @@ function openLink(id) {
 
 // Configurações em quatro abas, uma para cada parte. Abre na aba da estante em que você está;
 // depois de salvar alguma coisa, continua na mesma aba.
-const ABAS_CFG = [['jogos', '🎮 Jogos'], ['leitura', '📖 Leitura'], ['musica', '♪ Música'], ['geral', '⚙ Geral']];
+const ABAS_CFG = [['jogos', 'Jogos'], ['leitura', 'Leitura'], ['musica', 'Música'], ['geral', 'Geral']];
+// aparência: escolha só desta janela (cada pessoa no seu PC), guardada junto das outras escolhas da janela
+const temaEscolhido = () => store.get('tema', 'escuro');
+function aplicarTema() {
+  const t = temaEscolhido();
+  document.documentElement.dataset.tema = t === 'sistema' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'claro' : 'escuro') : t;
+}
+function trocarTema(t) {
+  store.set('tema', t); aplicarTema();
+  document.querySelectorAll('#temas button').forEach(b => { b.classList.toggle('on', b.dataset.tema === t); b.setAttribute('aria-pressed', b.dataset.tema === t); });
+}
+try { matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (temaEscolhido() === 'sistema') aplicarTema(); }); } catch (e) {}
 function trocarAbaCfg(aba) {
   S.abaCfg = aba;
   document.querySelectorAll('#cfgAbas button').forEach(b => b.classList.toggle('on', b.dataset.aba === aba));
@@ -1645,23 +1894,23 @@ async function openSettings(aba) {
     ${tituloCfg('Lojas e launchers', true)}
     <p class="hint" style="margin-top:0">A Estante traz sozinha os jogos instalados nestas lojas, sempre que abre e a cada 5 minutos. Ela só lê o que as lojas já guardam no seu PC: não pede senha e nunca mexe nos arquivos delas. Os jogos abrem pela própria loja. Desligando uma loja, os jogos dela somem da estante, mas ficam guardados com o tempo jogado para quando você ligar de novo. Lojas que não estão instaladas no seu PC simplesmente aparecem como não encontradas.</p>
     <div class="lojas-cfg" id="lojasCfg">${lojasCfgHTML(ls)}</div>
-    <button class="btn" id="lojasNow" onclick="importarLojas()">⟳ Importar agora</button>
+    <button class="btn" id="lojasNow" onclick="importarLojas()">Importar agora</button>
     ${tituloCfg('Pastas de jogos')}
     <p class="hint" style="margin-top:0">Para jogos que não vêm de loja. A Estante olha estas pastas sozinha a cada 5 minutos e sempre que abre: jogos novos entram na estante, e quando um jogo atualiza numa pasta com outro nome (por exemplo, Jogo-0.1 vira Jogo-0.2) ela reconhece que é o mesmo jogo e mantém tempo jogado, capa e coleções.</p>
     ${cfg.pastas.length ? `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">${cfg.pastas.map(p => `
       <div style="display:flex;align-items:center;gap:10px;background:var(--panel2);border-radius:8px;padding:8px 12px">
         <span class="path" style="flex:1;padding:0;background:none">${esc(p.path)}</span>
-        ${p.ok ? '' : '<span class="hint" style="color:#ffb35c">não encontrada</span>'}
+        ${p.ok ? '' : '<span class="hint" style="color:var(--warn)">não encontrada</span>'}
         <button class="btn ghost" data-rm="${esc(p.path)}">Parar de acompanhar</button></div>`).join('')}</div>`
       : '<p class="hint">Nenhuma pasta ainda. Escolha uma aqui embaixo, ou, ao escanear uma pasta, deixe marcado “Acompanhar esta pasta”.</p>'}
     <div class="inline" style="margin-bottom:10px"><input class="inp" id="pNova" placeholder="${cfg.pastas.length ? 'Outra pasta de jogos' : 'Pasta onde ficam seus jogos'}" onkeydown="if(event.key==='Enter')acompanharPasta()">
-      <button class="btn" onclick="pick('folder','pNova')">Procurar…</button><button class="btn primary" onclick="acompanharPasta()">＋ Acompanhar</button></div>
+      <button class="btn" onclick="pick('folder','pNova')">Procurar…</button><button class="btn primary" onclick="acompanharPasta()">Acompanhar</button></div>
     <div class="inline" style="flex-wrap:wrap">
-      ${cfg.pastas.length ? '<button class="btn" onclick="syncNow()">⟳ Verificar pastas agora</button>' : ''}
+      ${cfg.pastas.length ? '<button class="btn" onclick="syncNow()">Verificar pastas agora</button>' : ''}
       ${cfg.ignorados ? `<button class="btn ghost" onclick="forgetIgnored()">Deixar voltar os ${cfg.ignorados} jogo(s) que tirei</button>` : ''}
     </div>
     <div class="checks"><label><input type="checkbox" ${cfg.colecoes_pastas ? 'checked' : ''} onchange="ligarColecoesPastas(this.checked)">Criar e manter coleções seguindo as pastas</label></div>
-    <p class="hint" style="margin-top:4px">Com isto ligado, um jogo em <b>Jogos\\RPG\\Ação\\Nome do Jogo</b> entra na coleção RPG, subcoleção Ação, e muda de coleção sozinho se você mudar a pasta. As coleções que você criou à mão continuam iguais. Essas coleções aparecem com 📁 na barra lateral.</p>
+    <p class="hint" style="margin-top:4px">Com isto ligado, um jogo em <b>Jogos\\RPG\\Ação\\Nome do Jogo</b> entra na coleção RPG, subcoleção Ação, e muda de coleção sozinho se você mudar a pasta. As coleções que você criou à mão continuam iguais. Essas coleções aparecem com o desenho de uma pasta na barra lateral.</p>
     <p class="hint">Jogos que você apagar ou tirar da pasta saem da estante sozinhos. Se estiverem num HD externo desconectado, eles continuam aqui até você ligar o HD de novo.</p>
     ${tituloCfg('Capas automáticas (SteamGridDB)')}
     <p class="hint" style="margin-top:0">Mesmo sem nada configurado, a Estante procura cada jogo na loja pública da Steam pelo nome e traz capa, descrição, criador, ano e gêneros quando o nome bate certinho. Para os outros, o SteamGridDB, um site gratuito com capas de praticamente qualquer jogo, pode completar. Ele pede uma chave, que você pega uma vez só:</p>
@@ -1677,14 +1926,18 @@ async function openSettings(aba) {
     <p class="hint" style="margin-top:0">Para jogos que não estão no SteamGridDB, abra o jogo e use “Buscar dados pelo link” com a página dele no itch.io, Game Jolt ou no site do criador. Jogos instalados pelo app do itch.io já trazem capa e dados sozinhos quando você escaneia a pasta de instalação dele (normalmente %APPDATA%\\itch\\apps).</p>
     ${tituloCfg('Versões novas dos jogos')}
     <p class="hint" style="margin-top:0">Jogos com link salvo de páginas que informam a versão (como os tópicos do F95zone) podem ser verificados. A Estante compara com a versão que você tem e avisa quando sai uma nova.</p>
-    <button class="btn" onclick="closeModal();checkAll()">⟳ Verificar versões novas de todos</button>
+    <button class="btn" onclick="closeModal();checkAll()">Verificar versões novas de todos</button>
     ${tituloCfg('Wand (trainers)')}
-    <p class="hint" style="margin-top:0">Só para quem usa o Wand, um programa de trainers. Com ele instalado, os jogos que têm trainer ganham o selo ✦ Wand e os botões “Jogar com Wand” e “Ver no Wand”. A Estante usa a lista pública de jogos que o próprio Wand baixa, atualizada uma vez por dia, e só conta a versão que você tem: se o Wand não tem trainer para ela, o jogo fica sem o selo. Ela não mexe nos arquivos do Wand nem na sua conta.</p>
+    <p class="hint" style="margin-top:0">Só para quem usa o Wand, um programa de trainers. Com ele instalado, os jogos que têm trainer ganham o selo Wand e os botões “Jogar com Wand” e “Ver no Wand”. A Estante usa a lista pública de jogos que o próprio Wand baixa, atualizada uma vez por dia, e só conta a versão que você tem: se o Wand não tem trainer para ela, o jogo fica sem o selo. Ela não mexe nos arquivos do Wand nem na sua conta.</p>
     <div id="wandCfg">${wandCfgHTML(w)}</div>`;
   const geral = `
-    ${tituloCfg('Seus dados', true)}
+    ${tituloCfg('Aparência', true)}
+    <p class="hint" style="margin-top:0">O leitor, a tela da letra e o modo TV continuam sempre escuros, para não cansar a vista.</p>
+    <div class="temas" id="temas" role="group" aria-label="Aparência">${[['escuro', 'Escura'], ['claro', 'Clara'], ['sistema', 'Igual ao Windows']].map(([k, t]) =>
+      `<button data-tema="${k}" class="${temaEscolhido() === k ? 'on' : ''}" aria-pressed="${temaEscolhido() === k}" onclick="trocarTema('${k}')">${t}</button>`).join('')}</div>
+    ${tituloCfg('Seus dados')}
     <p class="hint" style="margin-top:0">Tudo o que a Estante guarda (jogos, leitura, capas, letras de música e configurações) fica no seu perfil do Windows${cfg.data_dir ? ', em <b>' + esc(cfg.data_dir) + '</b>' : ''}, e não na pasta do programa. Por isso dá para trocar de versão da Estante sem perder nada. Se algo der errado, o arquivo estante.log dentro dela mostra o que aconteceu.</p>
-    <button class="btn" onclick="api('/api/abrir-dados',{method:'POST'})">📂 Abrir pasta dos dados</button>
+    <button class="btn" onclick="api('/api/abrir-dados',{method:'POST'})">Abrir pasta dos dados</button>
     ${tituloCfg('Cópias de segurança')}
     <p class="hint" style="margin-top:0">A Estante guarda sozinha uma cópia dos seus dados por dia, com jogos, tempo jogado, coleções, leitura e configurações, e mantém as 10 mais novas. As capas não entram, porque ela busca de novo. Restaurar volta tudo para como estava na hora da cópia. Antes, ela guarda como está agora, para dar para desfazer.</p>
     <div id="copiasCfg"><div class="hint">Carregando…</div></div>
@@ -1719,7 +1972,7 @@ const BV = {passo: 0};
 const PASSOS_BV = ['Boas-vindas', 'Jogos', 'Leitura', 'Música', 'Pronto'];
 function bvHead() {
   return `<header><h2>${BV.passo ? esc(PASSOS_BV[BV.passo]) : 'Boas-vindas à Estante'}</h2>
-    <span class="hint" style="margin:0 10px 0 auto">${BV.passo + 1} de ${PASSOS_BV.length}</span><button class="x" title="Pular" onclick="fimBoasVindas()">×</button></header>`;
+    <span class="hint" style="margin:0 10px 0 auto">${BV.passo + 1} de ${PASSOS_BV.length}</span><button class="x" title="Pular" onclick="fimBoasVindas()">${ic('fechar')}</button></header>`;
 }
 function bvPe(proximo = 'Próximo') {
   const ultimo = BV.passo === PASSOS_BV.length - 1;
@@ -1739,7 +1992,7 @@ async function desenharBoasVindas() {
   if (p === 'Boas-vindas') {
     openModal(bvHead() + `<div class="body bv">
       <p style="margin-top:0">A Estante junta num lugar só os seus jogos e o que você lê, e mostra a música que está tocando.</p>
-      <p class="hint">Tudo fica neste computador: ela não tem conta, não pede senha e não manda seus dados para ninguém. Em três passos rápidos dá para deixar ela do seu jeito. Pode pular qualquer um, e tudo isso continua em ⚙ Configurações.</p>
+      <p class="hint">Tudo fica neste computador: ela não tem conta, não pede senha e não manda seus dados para ninguém. Em três passos rápidos dá para deixar ela do seu jeito. Pode pular qualquer um, e tudo isso continua em Configurações.</p>
       ${bvPe('Começar')}</div>`);
   } else if (p === 'Jogos') {
     openModal(bvHead() + `<div class="body bv">
@@ -1749,7 +2002,7 @@ async function desenharBoasVindas() {
       <p class="hint" style="margin-top:0">Tem jogos que não vieram de loja nenhuma? Escolha a pasta onde eles ficam. Pode ter subpastas por categoria. A Estante olha essa pasta sozinha de tempos em tempos.</p>
       <div id="bvPastas"></div>
       <div class="inline"><input class="inp" id="bvPasta" placeholder="Pasta onde ficam seus jogos" onkeydown="if(event.key==='Enter')bvAcompanhar()">
-        <button class="btn" onclick="pick('folder','bvPasta')">Procurar…</button><button class="btn" onclick="bvAcompanhar()">＋ Acompanhar</button></div>
+        <button class="btn" onclick="pick('folder','bvPasta')">Procurar…</button><button class="btn" onclick="bvAcompanhar()">Acompanhar</button></div>
       ${bvPe()}</div>`);
     bvMostrarPastas();
     try { const ls = await api('/api/lojas/importar', {method: 'POST'}); if ($('lojasCfg')) $('lojasCfg').innerHTML = lojasCfgHTML(ls); }
@@ -1763,9 +2016,9 @@ async function desenharBoasVindas() {
       <p class="hint" style="margin-top:0">A Leitura é um marcador: você lê nos sites, no seu navegador, e a Estante anota em que capítulo parou e avisa quando sai capítulo novo. Escolha os sites onde você lê. Dá para pôr outros depois, em Configurações.</p>
       <div class="chips" id="bvSites" style="margin-bottom:10px">${L.conhecidos.map(k => tem.has(k.chave)
         ? `<span class="chip" style="padding-right:12px">✓ ${esc(k.nome)}</span>`
-        : `<button class="btn sm" onclick="bvSite(${jsArg(k.chave)})">＋ ${esc(k.nome)} <small style="color:var(--dim)">${esc(k.dominio)}</small></button>`).join('')}
+        : `<button class="btn sm sug" onclick="bvSite(${jsArg(k.chave)})">${ic('mais')}${esc(k.nome)} <small style="color:var(--dim)">${esc(k.dominio)}</small></button>`).join('')}
         ${ss.sites.filter(x => !L.conhecidos.some(k => k.chave === x.chave)).map(x => `<span class="chip" style="padding-right:12px">✓ ${esc(x.nome)}</span>`).join('')}</div>
-      <div class="inline"><input class="inp" id="bvSiteOutro" placeholder="Outro site (ex.: meusite.com)" onkeydown="if(event.key==='Enter')bvSite()"><button class="btn" onclick="bvSite()">＋ Acrescentar</button></div>
+      <div class="inline"><input class="inp" id="bvSiteOutro" placeholder="Outro site (ex.: meusite.com)" onkeydown="if(event.key==='Enter')bvSite()"><button class="btn" onclick="bvSite()">Acrescentar</button></div>
       ${tituloCfg('A extensão do navegador')}
       <p class="hint" style="margin-top:0">É ela que avisa a Estante qual capítulo você abriu. Ela só age nos sites da sua lista e só conversa com a Estante aqui no seu computador.</p>
       <ol class="steps">
@@ -1774,7 +2027,7 @@ async function desenharBoasVindas() {
         <li>Clique em <b>Carregar sem pacote</b> (no Chrome, <b>Carregar sem compactação</b>) e escolha a pasta abaixo.</li>
       </ol>
       <div class="path">${esc(cfg.extensao_dir || 'a pasta “extensao”, dentro da pasta da Estante')}</div>
-      <div class="inline" style="margin-top:10px"><button class="btn" onclick="api('/api/abrir-extensao',{method:'POST'})">📂 Abrir essa pasta</button></div>
+      <div class="inline" style="margin-top:10px"><button class="btn" onclick="api('/api/abrir-extensao',{method:'POST'})">Abrir essa pasta</button></div>
       <p class="hint">Já tem uma lista no AniList ou no MyAnimeList? Depois, na Leitura, use “Importar” para trazer tudo.</p>
       ${bvPe()}</div>`);
   } else if (p === 'Música') {
@@ -1782,13 +2035,13 @@ async function desenharBoasVindas() {
     try { t = await api('/api/tocando/config'); } catch (e) {}
     openModal(bvHead() + `<div class="body bv">
       <p class="hint" style="margin-top:0">Quando você ouve música no Spotify, no YouTube ou em outro programa que aparece no controle de mídia do Windows, uma faixa embaixo da Estante mostra o que está tocando, com os botões e a letra, quando ela existir.</p>
-      ${t.disponivel ? '' : `<p class="hint" style="color:#ffb35c">${esc(t.motivo || 'Neste computador o controle de mídia do Windows não está disponível.')}</p>`}
+      ${t.disponivel ? '' : `<p class="hint" style="color:var(--warn)">${esc(t.motivo || 'Neste computador o controle de mídia do Windows não está disponível.')}</p>`}
       <div class="checks"><label><input type="checkbox" id="bvTocando" ${t.ligado ? 'checked' : ''} onchange="ligarTocando(this.checked)">Mostrar o que está tocando</label></div>
       ${bvPe()}</div>`);
   } else {
     openModal(bvHead() + `<div class="body bv">
       <p style="margin-top:0">Pronto! Os jogos aparecem na estante em instantes.</p>
-      <p class="hint">A Estante guarda sozinha uma cópia de segurança dos seus dados todo dia. Para mudar qualquer coisa, use ⚙ Configurações, no canto de cima. Na Leitura, o botão “＋” acrescenta séries, e “Importar” traz uma lista inteira.</p>
+      <p class="hint">A Estante guarda sozinha uma cópia de segurança dos seus dados todo dia. Para mudar qualquer coisa, use Configurações, no canto de cima. Na Leitura, o botão “Adicionar” acrescenta séries, e “Importar” traz uma lista inteira.</p>
       ${bvPe('Abrir a Estante')}</div>`);
   }
 }
@@ -1829,7 +2082,7 @@ async function mostrarCopias() {
         <button class="btn" onclick="restaurarCopia(${jsArg(c.nome)}, ${jsArg(quandoCopia(c.quando))})">Restaurar</button></div>`).join('')}</div>`
     : '<p class="hint">Nenhuma cópia ainda. A primeira automática é feita logo que a Estante abre.</p>') + `
     <div class="inline"><button class="btn primary" id="copiaAgora" onclick="guardarCopia()">Guardar uma cópia agora</button>
-      <button class="btn" onclick="api('/api/copias/abrir-pasta',{method:'POST'})">📂 Abrir pasta das cópias</button></div>
+      <button class="btn" onclick="api('/api/copias/abrir-pasta',{method:'POST'})">Abrir pasta das cópias</button></div>
     <p class="hint">Para levar seus dados para outro computador, copie um desses arquivos para a pasta das cópias da Estante de lá. Ele aparece nesta lista para restaurar.</p>`;
 }
 async function guardarCopia() {
@@ -1872,9 +2125,9 @@ function wandCfgHTML(w) {
   else if (!w.lista.baixado) st = 'Encontrado. A lista de jogos do Wand ainda vai ser baixada.';
   else st = (w.com_trainer ? (w.com_trainer === 1 ? '1 jogo seu tem trainer' : w.com_trainer + ' jogos seus têm trainer') : 'Nenhum jogo seu tem trainer no Wand por enquanto')
     + ' · lista atualizada: ' + fmtWhen(w.lista.baixado).toLowerCase();
-  return `<div class="loja-row" style="margin-bottom:10px"><div class="q"><b>✦ Wand${w.versao ? ' <small style="font-weight:400">' + esc(w.versao) + '</small>' : ''}</b><small>${esc(st)}</small></div>
+  return `<div class="loja-row" style="margin-bottom:10px"><div class="q"><b>Wand${w.versao ? ' <small style="font-weight:400">' + esc(w.versao) + '</small>' : ''}</b><small>${esc(st)}</small></div>
     ${w.encontrado ? `<label class="sw" title="${w.ligado ? 'Desligar' : 'Ligar'}"><input type="checkbox" ${w.ligado ? 'checked' : ''} onchange="ligarWand(this.checked)"><span></span></label>` : ''}</div>
-    ${w.encontrado && w.ligado ? '<button class="btn" id="wandNow" onclick="atualizarWand()">⟳ Atualizar lista do Wand</button>' : ''}`;
+    ${w.encontrado && w.ligado ? '<button class="btn" id="wandNow" onclick="atualizarWand()">Atualizar lista do Wand</button>' : ''}`;
 }
 async function ligarWand(ligado) {
   try { const w = await api('/api/wand', {method: 'POST', body: {ligado}}); $('wandCfg').innerHTML = wandCfgHTML(w); S.lastJson = ''; await load(); pollFor(30); }
@@ -1883,7 +2136,7 @@ async function ligarWand(ligado) {
 async function atualizarWand() {
   const b = $('wandNow'); if (b) { b.disabled = true; b.textContent = 'Baixando…'; }
   try { const w = await api('/api/wand/atualizar', {method: 'POST'}); if ($('wandCfg')) $('wandCfg').innerHTML = wandCfgHTML(w); S.lastJson = ''; await load(); toast('Lista do Wand atualizada.'); }
-  catch (e) { toast(e.message, true); if (b) { b.disabled = false; b.textContent = '⟳ Atualizar lista do Wand'; } }
+  catch (e) { toast(e.message, true); if (b) { b.disabled = false; b.textContent = 'Atualizar lista do Wand'; } }
 }
 async function ligarLoja(loja, ligada) {
   try {
@@ -1899,7 +2152,7 @@ async function importarLojas() {
     if ($('lojasCfg')) $('lojasCfg').innerHTML = lojasCfgHTML(ls);
     S.lastJson = ''; await load(); pollFor(40); toast('Lojas verificadas.');
   } catch (e) { toast(e.message, true); }
-  if (b) { b.disabled = false; b.textContent = '⟳ Importar agora'; }
+  if (b) { b.disabled = false; b.textContent = 'Importar agora'; }
 }
 async function acompanharPasta() {
   const p = ($('pNova') || {}).value?.trim(); if (!p) { toast('Escolha a pasta em “Procurar…” ou cole o caminho dela.', true); return; }
@@ -1937,13 +2190,13 @@ async function fetchMissing() {
 // ======================================================================= estante de Leitura
 const L = {novidades: [], historico: [], verificando: null, extensaoVista: null, sites: [], extDir: '', todosCaps: null, carregou: false};
 const MENU = {
-  jogos: `<button onclick="openScan()">📁 Escanear uma pasta<small>Acha os jogos de uma pasta inteira</small></button>
-    <button onclick="openManual()">🎮 Adicionar um jogo<small>Escolha o executável de um jogo</small></button>`,
-  leitura: `<button onclick="openColar()">🔗 Colar link de capítulo<small>A Estante reconhece a série e o número</small></button>
-    <button onclick="openAniList()">🔎 Buscar série<small>No MangaUpdates, para acrescentar à mão</small></button>
-    <button onclick="openImportar()">⇩ Importar sua lista<small>Arquivo XML do AniList/MyAnimeList ou pelo usuário</small></button>
-    <button onclick="openPastasQuadrinhos()">📁 Quadrinhos do seu PC<small>CBZ, CBR, PDF ou pastas de imagens</small></button>
-    <button onclick="openExtensao()">🧩 Instalar a extensão<small>Para marcar sozinha o que você lê</small></button>`,
+  jogos: `<button onclick="openScan()">Escanear uma pasta<small>Acha os jogos de uma pasta inteira</small></button>
+    <button onclick="openManual()">Adicionar um jogo<small>Escolha o executável de um jogo</small></button>`,
+  leitura: `<button onclick="openColar()">Colar link de capítulo<small>A Estante reconhece a série e o número</small></button>
+    <button onclick="openAniList()">Buscar série<small>No MangaUpdates, para acrescentar à mão</small></button>
+    <button onclick="openImportar()">Importar sua lista<small>Arquivo XML do AniList/MyAnimeList ou pelo usuário</small></button>
+    <button onclick="openPastasQuadrinhos()">Quadrinhos do seu PC<small>CBZ, CBR, PDF ou pastas de imagens</small></button>
+    <button onclick="openExtensao()">Instalar a extensão<small>Para marcar sozinha o que você lê</small></button>`,
 };
 const ORDENS = {
   jogos: [['name', 'Nome (A–Z)'], ['recent', 'Jogados por último'], ['time', 'Mais tempo jogado'], ['added', 'Adicionados por último'], ['year', 'Ano']],
@@ -2000,7 +2253,7 @@ async function loadLeitura() {
   } catch (e) { console.error(e); }
 }
 
-const corSite = k => k ? `hsl(${hue(k)} 65% 62%)` : '#6b717c';
+const corSite = k => k ? `hsl(${hue(k)} 55% 58%)` : 'var(--dim)';
 const dotSite = k => `<span class="dot" style="background:${corSite(k)}"></span>`;
 const capTxt = n => String(n).replace('.', ',');
 const siteNome = k => k === 'local' ? 'seu PC' : (L.sites.find(x => x.chave === k) || {}).nome || k;
@@ -2053,9 +2306,9 @@ function renderNavLeitura() {
       sitesUsados.sort((a, b) => !a - !b || nomeNaLista(a).localeCompare(nomeNaLista(b)))
         .map(k => navItem('site', nomeNaLista(k), dotSite(k), shown.filter(s => sitesDe(s).includes(k)).length, k)).join('') : '') +
     (listas.length ? `<h4>Sua lista</h4>` + listas.map(l => navItem('lista', l, '☰', shown.filter(s => s.lista_anilist === l).length, l)).join('') : '') +
-    `<h4>Coleções <button title="Nova coleção" onclick="newCollection()">＋</button></h4>` +
+    `<h4>Coleções <button title="Nova coleção" aria-label="Nova coleção" onclick="newCollection()">${ic('mais')}</button></h4>` +
     (tags.length ? tags.map(([t, n]) => navItem('tag', t, '▤', n, t)).join('')
-      : `<div class="empty-tags">Nenhuma coleção ainda. Clique no ＋ ou use “Selecionar” para juntar várias séries de uma vez.</div>`);
+      : `<div class="empty-tags">Nenhuma coleção ainda. Clique no + ou use “Selecionar” para juntar várias séries de uma vez.</div>`);
   $('tagList').innerHTML = tags.map(([t]) => `<option value="${esc(t)}">`).join('');
 }
 
@@ -2103,16 +2356,19 @@ function subSerie(s) {
 }
 function cardSerie(s, comBotao) {
   const p = s.proximo_cap || {};
-  return `<div class="card${S.picked.has(s.id) ? ' picked' : ''}" tabindex="0" data-id="${s.id}">
+  const lido = parseFloat(s.ultimo_lido), disp = parseFloat(s.disp_txt);
+  const pct = lido > 0 && disp > lido ? lido / disp * 100 : 0;   // só aparece enquanto falta ler
+  const quem = [s.tipo, s.site_nome || s.site_principal].filter(Boolean).join(' · ');
+  return `<div class="card leit${S.picked.has(s.id) ? ' picked' : ''}" tabindex="0" data-id="${s.id}">
     <div class="cover">${coverHTML(s)}
-      ${s.tem_novo ? `<div class="badge cnovo" title="Capítulos que saíram depois do último que você leu">${s.nao_lidos} ${s.nao_lidos === 1 ? 'NOVO' : 'NOVOS'}</div>` : ''}
-      ${s.favorite && !S.selecting ? '<div class="fav">★</div>' : ''}
-      ${s.site_principal ? `<div class="lojatag">${dotSite(s.site_principal)}${esc(s.site_nome || s.site_principal)}</div>` : ''}
+      ${s.tem_novo ? `<div class="badge cnovo" title="Capítulos que saíram depois do último que você leu">${s.nao_lidos} ${s.nao_lidos === 1 ? 'novo' : 'novos'}</div>` : ''}
+      ${s.favorite && !S.selecting ? `<div class="fav" title="Favorita">${ic('estrela', 'cheio')}</div>` : ''}
       <div class="check"></div>
-      <div class="play"><span data-ler="${s.id}" title="${p.existe === false ? 'Você está em dia' : 'Ler capítulo ' + esc(capTxt(p.num))}"><svg viewBox="0 0 24 24" fill="#16120a"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H10c1.1 0 2 .9 2 2v13c0-.8-.7-1.5-1.5-1.5h-5C4.7 17.5 4 16.8 4 16V5.5Zm16 0c0-.8-.7-1.5-1.5-1.5H14c-1.1 0-2 .9-2 2v13c0-.8.7-1.5 1.5-1.5h5c.8 0 1.5-.7 1.5-1.5V5.5Z"/></svg></span></div>
+      <div class="play"><span data-ler="${s.id}" title="${p.existe === false ? 'Você está em dia' : 'Ler capítulo ' + esc(capTxt(p.num))}">${ic('ler')}${p.existe === false ? 'Em dia' : 'Ler ' + esc(capTxt(p.num))}</span></div>
     </div>
-    <div class="meta"><div class="t" title="${esc(s.name)}">${esc(s.name)}</div><div class="s">${esc(subSerie(s))}</div>
-      ${comBotao ? (p.existe === false ? `<button class="btn sm ler-btn" disabled>✓ Em dia</button>` : `<button class="btn primary sm ler-btn" data-ler="${s.id}" title="${p.continuar ? 'Você parou no meio deste capítulo' : ''}">${p.continuar ? 'Continuar' : 'Ler'} capítulo ${esc(capTxt(p.num))}</button>`) : ''}</div>
+    ${pct ? `<div class="marcador" title="${Math.round(pct)}% lido"><i style="width:${pct}%"></i></div>` : ''}
+    <div class="meta"><div class="t" title="${esc(s.name)}">${esc(s.name)}</div><div class="s" title="${esc(quem)}">${esc(subSerie(s))}</div>
+      ${comBotao ? (p.existe === false ? `<button class="btn sm ler-btn" disabled>Em dia</button>` : `<button class="btn primary sm ler-btn" data-ler="${s.id}" title="${p.continuar ? 'Você parou no meio deste capítulo' : ''}">${p.continuar ? 'Continuar' : 'Ler'} capítulo ${esc(capTxt(p.num))}</button>`) : ''}</div>
   </div>`;
 }
 
@@ -2144,18 +2400,18 @@ function renderLeitura() {
   const v = S.view;
   let html = '';
   if (!S.games.length) {
-    html = `<div class="blank"><div class="big">📖</div><h2>Sua Leitura está vazia</h2>
+    html = `<div class="blank"><div class="kick">Leitura</div><h2>Sua Leitura está vazia</h2>
       A Estante guarda onde você parou em cada mangá, manhwa ou HQ que você lê nos sites, e avisa quando sai capítulo novo. A leitura continua nos sites.
       <br><br>O jeito mais fácil é instalar a extensão do navegador: depois disso, é só ler normalmente que tudo aparece aqui sozinho.
-      <div class="acts"><button class="btn primary" onclick="openExtensao()">🧩 Instalar a extensão</button>
-      <button class="btn" onclick="openImportar()">⇩ Importar sua lista</button><button class="btn" onclick="openColar()">🔗 Colar link de capítulo</button></div></div>`;
+      <div class="acts"><button class="btn primary" onclick="openExtensao()">Instalar a extensão</button>
+      <button class="btn" onclick="openImportar()">Importar sua lista</button><button class="btn ghost" onclick="openColar()">Colar link de capítulo</button></div></div>`;
   } else if (v.type === 'novidades') {
     const itens = L.novidades.map(n => ({...n, s: byId(n.s)})).filter(n => n.s && !n.s.hidden);
     html = `<div class="head"><h1>Novidades</h1><span>capítulos novos das suas séries</span>
-      <button class="btn" style="margin-left:auto" id="verBtn" onclick="verificarLeitura()">${L.verificando && L.verificando.ativo ? 'Procurando…' : '⟳ Procurar agora'}</button></div>` +
+      <button class="btn" style="margin-left:auto" id="verBtn" onclick="verificarLeitura()">${L.verificando && L.verificando.ativo ? 'Procurando…' : 'Procurar agora'}</button></div>` +
       (itens.length ? listaPorDia(itens, n => linhaHTML(n.s, 'Capítulo ' + esc(capTxt(n.c)) + (n.site ? ' · saiu primeiro no ' + esc(siteNome(n.site)) : '') + (n.s.ultimo_lido != null && n.c <= n.s.ultimo_lido ? ' · <span style="color:var(--ok)">lido</span>' : ''), hora(n.t),
         `<button class="btn sm" data-lercap="${n.s.id}" data-n="${n.c}">Ler</button>`))
-        : `<div class="blank"><div class="big">✦</div>Nenhum capítulo novo por enquanto.<br><span class="hint">A Estante procura capítulos novos a cada 6 horas, no MangaUpdates e nas páginas de série que você abre nos sites.</span></div>`);
+        : `<div class="blank curto"><h2>Nada novo por enquanto</h2><span class="hint">A Estante procura capítulos novos a cada 6 horas, no MangaUpdates e nas páginas de série que você abre nos sites.</span></div>`);
   } else if (v.type === 'historico') {
     const vistos = new Set();
     const itens = L.historico.map(h => ({...h, s: byId(h.s)})).filter(h => {
@@ -2167,29 +2423,29 @@ function renderLeitura() {
     html = `<div class="head"><h1>Histórico</h1><span>o que você leu, do mais recente</span></div>` +
       (itens.length ? listaPorDia(itens, h => linhaHTML(h.s, 'Capítulo ' + esc(capTxt(h.c)), hora(h.t),
         h.s.proximo_cap && h.s.proximo_cap.existe === false ? '<span class="hint">em dia</span>' : `<button class="btn sm primary" data-ler="${h.s.id}">Continuar</button>`))
-        : `<div class="blank"><div class="big">◷</div>Nada lido ainda.<br><span class="hint">Com a extensão instalada, cada capítulo que você abre aparece aqui.</span></div>`);
+        : `<div class="blank curto"><h2>Nada lido ainda</h2><span class="hint">Com a extensão instalada, cada capítulo que você abre aparece aqui.</span></div>`);
   } else {
     const list = visible();
     const titulos = {all: 'Biblioteca', fav: 'Favoritos', novos: 'Com capítulo novo', hidden: 'Ocultos', recent: 'Lidas recentemente'};
     const tit = v.type === 'site' ? nomeNaLista(v.tag) : titulos[v.type] || v.tag;
     html += `<div class="head"><h1>${esc(tit)}</h1><span>${list.length} ${list.length === 1 ? 'série' : 'séries'}</span>
-      <button class="btn${filtrosAtivos() ? ' on' : ''}" style="align-self:center" onclick="L.filtrosAbertos=!L.filtrosAbertos;render()">⚲ Filtros${filtrosAtivos() ? ' (' + filtrosAtivos() + ')' : ''}</button>
+      <button class="btn${filtrosAtivos() ? ' on' : ''}" style="align-self:center" onclick="L.filtrosAbertos=!L.filtrosAbertos;render()" aria-expanded="${!!L.filtrosAbertos}">${ic('ajustes')}Filtros${filtrosAtivos() ? ' (' + filtrosAtivos() + ')' : ''}</button>
       ${v.type === 'tag' ? `<button class="btn ghost" style="margin-left:auto" onclick="renameCollection()">Renomear coleção</button>` : ''}
-      ${v.type === 'novos' ? `<button class="btn" style="margin-left:auto" id="verBtn" onclick="verificarLeitura()">${L.verificando && L.verificando.ativo ? 'Procurando…' : '⟳ Procurar capítulos novos'}</button>` : ''}
-      ${v.type === 'site' && !v.tag && siteComBusca() && list.length ? `<button class="btn" style="margin-left:auto" id="procurarBtn" onclick="procurarNoSite()" title="A extensão procura cada série na busca do site, devagar, e liga só quando um único resultado tem o mesmo nome">🔗 Procurar no ${esc(siteComBusca().nome)}</button>` : ''}</div>`;
+      ${v.type === 'novos' ? `<button class="btn" style="margin-left:auto" id="verBtn" onclick="verificarLeitura()">${L.verificando && L.verificando.ativo ? 'Procurando…' : 'Procurar capítulos novos'}</button>` : ''}
+      ${v.type === 'site' && !v.tag && siteComBusca() && list.length ? `<button class="btn" style="margin-left:auto" id="procurarBtn" onclick="procurarNoSite()" title="A extensão procura cada série na busca do site, devagar, e liga só quando um único resultado tem o mesmo nome">Procurar no ${esc(siteComBusca().nome)}</button>` : ''}</div>`;
     if (L.filtrosAbertos) html += filtrosHTML(S.games.filter(s => v.type === 'hidden' ? s.hidden : !s.hidden));
     if (v.type === 'all' && !S.q && !S.selecting && !L.extensaoVista) {
-      html += `<div class="aviso"><span>🧩</span><div>Instale a extensão do navegador para a Estante marcar sozinha cada capítulo que você abre nos sites.</div>
+      html += `<div class="aviso"><div>Instale a extensão do navegador para a Estante marcar sozinha cada capítulo que você abre nos sites.</div>
         <div class="acts"><button class="btn primary" onclick="openExtensao()">Como instalar</button></div></div>`;
     }
     if (v.type === 'all' && !S.q && !S.selecting && L.extensaoVelha) html += avisoExtensaoVelha();
     if (v.type === 'all' && !S.q && !S.selecting && !filtrosAtivos()) {
       const cont = S.games.filter(s => !s.hidden && s.ultima_leitura).sort((a, b) => b.ultima_leitura - a.ultima_leitura).slice(0, 8);
-      if (cont.length) html += `<div class="row-title">Continue lendo</div><div class="strip">${cont.map(s => cardSerie(s, true)).join('')}</div><div class="row-title">Biblioteca</div>`;
+      if (cont.length) html += destaqueHTML(cont, true) + `<div class="row-title">Biblioteca</div>`;
     }
     html += list.length ? `<div class="grid">${list.map(s => cardSerie(s)).join('')}</div>`
-      : v.type === 'novos' && !S.q ? `<div class="blank"><div class="big">✓</div>Tudo em dia! Nenhuma série com capítulo novo.</div>`
-      : `<div class="blank"><div class="big">🔍</div>Nada por aqui${S.q ? ' com essa busca' : ''}.</div>`;
+      : v.type === 'novos' && !S.q ? `<div class="blank curto"><h2>Tudo em dia</h2>Nenhuma série com capítulo novo.</div>`
+      : `<div class="blank curto"><h2>Nada por aqui</h2>${S.q ? 'Nenhuma série com “' + esc(S.q.trim()) + '”. A busca também olha os nomes alternativos, o autor e os gêneros.' : filtrosAtivos() ? 'Nenhuma série passa pelos filtros marcados.' : 'Esta parte da estante ainda está vazia.'}</div>`;
   }
   $('content').innerHTML = html;
   updateBulk();
@@ -2201,7 +2457,7 @@ function renderLeitura() {
 // a Estante foi atualizada, mas o navegador ainda usa a extensão antiga
 function avisoExtensaoVelha() {
   const nav = L.navegador === 'chrome' ? 'chrome://extensions' : 'edge://extensions';
-  return `<div class="aviso"><span>🧩</span><div>A extensão do navegador está desatualizada${L.extensaoVersao ? ' (versão ' + esc(L.extensaoVersao) + ')' : ''}. A Estante já tem a versão ${esc(L.extensaoPasta)}. Abra <b>${nav}</b> no navegador e clique em <b>Recarregar</b> na extensão “Estante - Leitura”.</div></div>`;
+  return `<div class="aviso"><div>A extensão do navegador está desatualizada${L.extensaoVersao ? ' (versão ' + esc(L.extensaoVersao) + ')' : ''}. A Estante já tem a versão ${esc(L.extensaoPasta)}. Abra <b>${nav}</b> no navegador e clique em <b>Recarregar</b> na extensão “Estante - Leitura”.</div></div>`;
 }
 function ondeAbrir() { return pref.get('leitorOnde', L.extensaoVista ? 'mesma' : 'janela'); }
 async function abrirSite(url) {
@@ -2310,16 +2566,16 @@ function renderSerie() {
   $('drawer').innerHTML = `
     <div class="hero">
       <div class="bgimg" style="${s.cover_url ? `background-image:url('${esc(s.cover_url)}')` : `background:hsl(${hue(s.name)} 40% 25%)`}"></div>
-      <button class="x" onclick="closeDrawer()">×</button>
-      <div class="cover">${coverHTML(s)}</div>
+      ${xBtn('closeDrawer()')}
+      <div class="cover leit">${coverHTML(s)}</div>
       <div style="min-width:0">
         <div class="yr">${esc([s.tipo, s.year].filter(Boolean).join(' · ')) || '&nbsp;'}</div>
         <h2>${esc(s.name)}</h2>
         ${s.autor ? `<div class="dev">por ${esc(s.autor)}</div>` : ''}
         ${pills.length ? `<div class="infos">${pills.join('')}</div>` : ''}
         <div class="acts">
-          ${p.existe === false ? `<button class="btn" disabled>✓ Em dia</button>` : `<button class="btn primary" onclick="lerProximo('${s.id}')" title="${p.site_nome ? 'Abre no ' + esc(p.site_nome) : ''}">📖 ${p.continuar ? 'Continuar' : 'Ler'} capítulo ${esc(capTxt(p.num))}</button>`}
-          <button class="btn${s.favorite ? ' on' : ''}" onclick="togFav()">${s.favorite ? '★ Favorita' : '☆ Favoritar'}</button>
+          ${p.existe === false ? `<button class="btn" disabled>Em dia</button>` : `<button class="btn primary" onclick="lerProximo('${s.id}')" title="${p.site_nome ? 'Abre no ' + esc(p.site_nome) : ''}">${ic('ler')}${p.continuar ? 'Continuar' : 'Ler'} capítulo ${esc(capTxt(p.num))}</button>`}
+          <button class="btn${s.favorite ? ' on' : ''}" onclick="togFav()" aria-pressed="${!!s.favorite}">${ic('estrela', s.favorite ? 'cheio' : '')}${s.favorite ? 'Favorita' : 'Favoritar'}</button>
         </div>
         ${p.continuar ? `<div class="hint" style="margin-top:8px">Você parou no meio do capítulo ${esc(capTxt(p.num))}${p.total ? ', na página ' + (p.pagina + 1) + ' de ' + p.total : ''}${p.pct ? ' (' + p.pct + '%)' : ''}. Ao abrir, a página rola sozinha até lá.</div>` : ''}
         ${s.lido_txt && !p.continuar ? `<div class="hint" style="margin-top:8px">Você leu até o capítulo ${esc(capTxt(s.lido_txt))}${s.ultima_leitura ? ', ' + fmtWhen(s.ultima_leitura).toLowerCase() : ''}${p.site_nome && p.existe !== false ? ' · o próximo abre no ' + esc(p.site_nome) : ''}</div>` : ''}
@@ -2340,7 +2596,7 @@ function renderSerie() {
       ${(s.sites_info || []).length ? `<div class="fontes" style="margin-bottom:10px">${s.sites_info.map(x => `
         <div class="fonte"><div class="q"><b>${dotSite(x.site)}${esc(x.nome)}${x.principal ? ' <span class="principal">principal</span>' : ''}</b>
           <small>${x.ultimo_txt ? 'Até o capítulo ' + esc(capTxt(x.ultimo_txt)) + ' lá' : 'Ainda não olhado'}</small></div>
-          ${x.url_serie ? `<button class="btn" onclick="abrirSite(${jsArg(x.url_serie)})">🌐 Abrir série</button>` : ''}
+          ${x.url_serie ? `<button class="btn" onclick="abrirSite(${jsArg(x.url_serie)})">Abrir série</button>` : ''}
           ${x.principal ? '' : `<button class="btn ghost" onclick="sitePrincipal(${jsArg(x.site)})">Usar como principal</button>`}
           <button class="btn ghost" title="Desligar esta série deste site" onclick="tirarSite(${jsArg(x.site)})">×</button></div>`).join('')}</div>
         ${s.sites_info.length > 1 ? '<p class="hint" style="margin-top:0">Como no Mihon: quando sai um capítulo novo, a Estante anota em qual desses sites ele apareceu primeiro, e o “Ler capítulo” abre nele.</p>' : ''}`
@@ -2352,15 +2608,15 @@ function renderSerie() {
     ${notaHTML(s)}
     <div class="sec"><h3>Coleções</h3>
       <div class="chips">${s.tags.map(t => `<span class="chip">${esc(t)}<button title="Tirar" onclick="rmTag(${jsArg(t)})">×</button></span>`).join('')}
-      <input id="tagIn" list="tagList" placeholder="＋ adicionar a uma coleção" onkeydown="if(event.key==='Enter')addTag()" onchange="addTag()"></div></div>
+      <input id="tagIn" list="tagList" placeholder="+ adicionar a uma coleção" onkeydown="if(event.key==='Enter')addTag()" onchange="addTag()"></div></div>
     <div class="sec toggles">
-      ${s.mu_id ? `<button class="btn" id="muDeNovo" onclick="atualizarDoMu('${s.id}')" title="Capa, descrição, situação, gêneros, autor e nomes alternativos. O nome, a capa escolhida por você e o capítulo lido não mudam.">⟳ Buscar de novo no MangaUpdates</button>` : ''}
-      <button class="btn" onclick="openAniList('${s.id}')">🔎 ${s.mu_id ? 'Corrigir série (MangaUpdates)' : 'Buscar dados no MangaUpdates'}</button>
-      ${s.url_mu ? `<button class="btn" onclick="window.open(${jsArg(s.url_mu)}, '_blank')">🌐 Página no MangaUpdates</button>` : ''}
-      <button class="btn" id="chkBtn" onclick="verificarSerie('${s.id}')">⟳ Procurar capítulos novos</button>
-      <label class="btn">🖼 Trocar capa<input type="file" accept="image/*" hidden onchange="capaSerie('${s.id}', this)"></label>
-      <button class="btn" onclick="editarSerie('${s.id}')">✎ Editar</button>
-      <button class="btn" onclick="openJuntarComSerie('${s.id}')" title="Para quando a mesma obra virou duas séries">⧉ Juntar com outra série</button>
+      ${s.mu_id ? `<button class="btn" id="muDeNovo" onclick="atualizarDoMu('${s.id}')" title="Capa, descrição, situação, gêneros, autor e nomes alternativos. O nome, a capa escolhida por você e o capítulo lido não mudam.">Buscar de novo no MangaUpdates</button>` : ''}
+      <button class="btn" onclick="openAniList('${s.id}')">${s.mu_id ? 'Corrigir série (MangaUpdates)' : 'Buscar dados no MangaUpdates'}</button>
+      ${s.url_mu ? `<button class="btn" onclick="window.open(${jsArg(s.url_mu)}, '_blank')">Página no MangaUpdates</button>` : ''}
+      <button class="btn" id="chkBtn" onclick="verificarSerie('${s.id}')">Procurar capítulos novos</button>
+      <label class="btn">Trocar capa<input type="file" accept="image/*" hidden onchange="capaSerie('${s.id}', this)"></label>
+      <button class="btn" onclick="editarSerie('${s.id}')">Editar</button>
+      <button class="btn" onclick="openJuntarComSerie('${s.id}')" title="Para quando a mesma obra virou duas séries">Juntar com outra série</button>
       <button class="btn" onclick="togHide()">${s.hidden ? 'Mostrar na estante' : 'Ocultar'}</button>
     </div>`;
 }
@@ -2406,7 +2662,7 @@ async function atualizarDoMu(id) {
     const s = await api(`/api/leitura/${id}/atualizar-mu`, {method: 'POST'});
     const i = S.games.findIndex(x => x.id === id); if (i >= 0) S.games[i] = s;
     S.lastJson = ''; render(); renderDrawer(); toast('Dados da série atualizados pelo MangaUpdates.');
-  } catch (e) { toast(e.message, true); if (b) { b.disabled = false; b.textContent = '⟳ Buscar de novo no MangaUpdates'; } }
+  } catch (e) { toast(e.message, true); if (b) { b.disabled = false; b.textContent = 'Buscar de novo no MangaUpdates'; } }
 }
 async function atualizarTodasDoMu() {
   const n = S.games.filter(s => s.mu_id).length;
@@ -2420,7 +2676,7 @@ async function atualizarTodasDoMu() {
 async function acompanharAtualizacaoMu() {
   let st; try { st = await api('/api/leitura/atualizar-mu'); } catch (e) { return; }
   const el = $('muTodas');
-  if (el) el.textContent = st.ativo ? `Buscando… ${st.feitos} de ${st.total}` : '⟳ Buscar de novo os dados de todas';
+  if (el) el.textContent = st.ativo ? `Buscando… ${st.feitos} de ${st.total}` : 'Buscar de novo os dados de todas';
   if (el) el.disabled = !!st.ativo;
   if (st.ativo) return setTimeout(acompanharAtualizacaoMu, 3000);
   if (st.total) { S.lastJson = ''; await load(); toast(`Dados de ${st.feitos - st.erros} série${st.feitos - st.erros === 1 ? '' : 's'} atualizados pelo MangaUpdates.` + (st.erros ? ` ${st.erros} não responderam.` : '')); }
@@ -2470,9 +2726,9 @@ function openColar() {
     if (!u) { $('cPrev').textContent = ''; $('cOk').disabled = true; return; }
     try {
       const r = await api('/api/leitura/entender?url=' + encodeURIComponent(u));
-      if (!r.site) { $('cPrev').innerHTML = '<span style="color:#ffb35c">Esse site não está na lista. Você pode acrescentar ele nas Configurações.</span>'; $('cOk').disabled = true; return; }
+      if (!r.site) { $('cPrev').innerHTML = '<span style="color:var(--warn)">Esse site não está na lista. Você pode acrescentar ele nas Configurações.</span>'; $('cOk').disabled = true; return; }
       const st = (L.sites.find(x => x.chave === r.site) || {}).nome || r.site;
-      if (r.tipo !== 'capitulo') { $('cPrev').innerHTML = `<span style="color:#ffb35c">Isso parece a página da série no ${esc(st)}. Cole o link de um capítulo.</span>`; $('cOk').disabled = true; return; }
+      if (r.tipo !== 'capitulo') { $('cPrev').innerHTML = `<span style="color:var(--warn)">Isso parece a página da série no ${esc(st)}. Cole o link de um capítulo.</span>`; $('cOk').disabled = true; return; }
       $('cPrev').innerHTML = `✓ ${esc(st)} · <b>${esc(r.titulo)}</b> · capítulo ${esc(capTxt(r.num_txt))}`;
       $('cOk').disabled = false;
     } catch (e) { $('cPrev').textContent = e.message; }
@@ -2518,7 +2774,7 @@ function openAniList(id) {
           L.semAviso = Date.now() + 4000; closeModal(); S.lastJson = ''; await load(); pollFor(20);
         } catch (e) { toast(e.message, true); go(); }
       });
-    } catch (e) { $('aRes').innerHTML = `<p class="hint" style="color:#ff8a8d">${esc(e.message)}</p>`; }
+    } catch (e) { $('aRes').innerHTML = `<p class="hint" style="color:var(--err)">${esc(e.message)}</p>`; }
   };
   $('aGo').onclick = go;
   $('aq').onkeydown = e => { if (e.key === 'Enter') go(); };
@@ -2553,10 +2809,10 @@ async function openImportar() {
     <p class="hint" style="margin-top:0">Traz as séries da sua lista e o capítulo em que você parou em cada uma. Séries que já estão na Estante não são duplicadas, e o capítulo lido só avança, nunca volta. Se a sua lista estiver desatualizada, não tem problema: conforme você abrir os capítulos nos sites, a extensão avança cada série sozinha.</p>
     <h3 style="margin:16px 0 8px;font-size:15px">De um arquivo</h3>
     <p class="hint" style="margin-top:0">A lista exportada em XML pelo AniList ou pelo MyAnimeList (por exemplo, manga-list.xml), ou a exportada pelo Comix em CSV (no Comix: Perfil &gt; Import / Export &gt; Export &gt; CSV (Comix)). O arquivo só é lido, nada é mudado nele.</p>
-    <label class="btn">📄 Escolher o arquivo…<input type="file" id="iArq" accept=".xml,.gz,.csv" hidden></label> <span class="hint" id="iArqNome"></span>
+    <label class="btn">Escolher o arquivo…<input type="file" id="iArq" accept=".xml,.gz,.csv" hidden></label> <span class="hint" id="iArqNome"></span>
     ${comixLista ? `<h3 style="margin:22px 0 8px;font-size:15px">Ligar as séries ao ${esc(comixLista.nome)}</h3>
     <p class="hint" style="margin-top:0">O arquivo do ${esc(comixLista.nome)} não traz o endereço de cada série no site. Depois de importar o CSV, clique abaixo: a sua lista abre numa aba do navegador e a extensão vai passando as páginas sozinha, devagar, ligando cada série ao endereço dela no ${esc(comixLista.nome)}. Leva alguns minutos; deixe a aba aberta até aparecer “pronto”.</p>
-    <button class="btn" onclick="ligarComix()">🔗 Abrir a minha lista no ${esc(comixLista.nome)}</button>` : ''}
+    <button class="btn" onclick="ligarComix()">Abrir a minha lista no ${esc(comixLista.nome)}</button>` : ''}
     <h3 style="margin:22px 0 8px;font-size:15px">Ou direto do AniList</h3>
     <label class="f"><span>Nome de usuário no AniList (a lista precisa estar pública)</span><input class="inp" id="iU" value="${esc(usuario)}" placeholder="Seu nome de usuário no AniList"></label>
     <div class="checks"><label><input type="checkbox" id="iCap" checked>Usar o capítulo em que parei que está na lista</label></div>
@@ -2606,7 +2862,7 @@ async function openExtensao() {
       <li>Clique em <b>Carregar sem pacote</b> (no Chrome: <b>Carregar sem compactação</b>) e escolha esta pasta:</li>
     </ol>
     <div class="path">${esc(cfg.extensao_dir || 'a pasta “extensao”, dentro da pasta da Estante')}</div>
-    <div class="inline" style="margin-top:10px"><button class="btn" onclick="api('/api/abrir-extensao',{method:'POST'})">📂 Abrir essa pasta</button></div>
+    <div class="inline" style="margin-top:10px"><button class="btn" onclick="api('/api/abrir-extensao',{method:'POST'})">Abrir essa pasta</button></div>
     <ol class="steps" start="4" style="margin-top:14px">
       <li>Pronto. Fixe o ícone da Estante ao lado da barra de endereço, se quiser ver o que ela registrou.</li>
       <li>Abra um capítulo em qualquer um dos seus sites: em poucos segundos ele aparece aqui.</li>
@@ -2620,7 +2876,7 @@ async function openPastasQuadrinhos() {
   try { r = await api('/api/leitura/pastas'); } catch (e) {}
   openModal(head('Quadrinhos do seu PC') + `<div class="body">
     <p class="hint" style="margin-top:0">Escolha as pastas onde você guarda mangás e HQs. Cada subpasta vira uma série, e cada arquivo CBZ, ZIP, CBR, PDF ou pasta de imagens dentro dela vira um capítulo. Eles abrem no leitor da própria Estante, que guarda a página em que você parou. A Estante só lê os arquivos, nunca muda nada neles.</p>
-    ${r.pastas.length ? `<div class="fontes" style="margin-bottom:10px">${r.pastas.map(p => `<div class="fonte"><div class="q"><span class="path" style="background:none;padding:0">${esc(p.path)}</span>${p.ok ? '' : '<small style="color:#ffb35c">não encontrada</small>'}</div>
+    ${r.pastas.length ? `<div class="fontes" style="margin-bottom:10px">${r.pastas.map(p => `<div class="fonte"><div class="q"><span class="path" style="background:none;padding:0">${esc(p.path)}</span>${p.ok ? '' : '<small style="color:var(--warn)">não encontrada</small>'}</div>
       <button class="btn ghost" onclick="tirarPastaQ(${jsArg(p.path)})">Tirar</button></div>`).join('')}</div>` : ''}
     <div class="inline"><input class="inp" id="qDir" placeholder="C:\\Quadrinhos"><button class="btn" onclick="pick('folder','qDir')">Procurar…</button><button class="btn primary" onclick="addPastaQ()">Acrescentar</button></div>
     <p class="hint">${r.sete_zip ? '✓ O 7-Zip está instalado: arquivos CBR também funcionam.' : 'Arquivos CBR (e RAR) precisam do 7-Zip instalado (7-zip.org). CBZ, ZIP, PDF e pastas de imagens funcionam sem ele.'} A Estante olha essas pastas sozinha a cada 5 minutos.</p>
@@ -2643,8 +2899,8 @@ function leituraCfgHTML() {
     ${ss.length ? '' : '<p class="hint" style="color:var(--text)">Nenhum site ainda. Escolha abaixo os sites onde você lê, ou acrescente outro.</p>'}
     <div class="sites-cfg" id="sitesCfg">${ss.map(siteRowHTML).join('')}</div>
     ${faltam.length ? `<p class="hint" style="margin:10px 0 6px">Sites que a Estante já sabe ler direitinho (capítulo, série e capítulos novos). Clique para acrescentar:</p>
-      <div class="chips" style="margin-bottom:10px">${faltam.map(k => `<button class="btn sm" onclick="acrescentarConhecido(${jsArg(k.chave)})">＋ ${esc(k.nome)} <small style="color:var(--dim)">${esc(k.dominio)}</small></button>`).join('')}</div>` : ''}
-    <div class="inline"><button class="btn ghost" onclick="$('sitesCfg').insertAdjacentHTML('beforeend', siteRowHTML({}))">＋ Outro site</button><span class="spacer"></span><button class="btn primary" onclick="salvarSites()">Salvar sites</button></div>
+      <div class="chips" style="margin-bottom:10px">${faltam.map(k => `<button class="btn sm sug" onclick="acrescentarConhecido(${jsArg(k.chave)})">${ic('mais')}${esc(k.nome)} <small style="color:var(--dim)">${esc(k.dominio)}</small></button>`).join('')}</div>` : ''}
+    <div class="inline"><button class="btn ghost" onclick="$('sitesCfg').insertAdjacentHTML('beforeend', siteRowHTML({}))">Outro site</button><span class="spacer"></span><button class="btn primary" onclick="salvarSites()">Salvar sites</button></div>
     <p class="hint">Em outros sites, a Estante reconhece o capítulo pelo endereço (quando ele tem algo como “chapter-12”), mas não sabe procurar capítulos novos neles.</p>
     ${ss.length > 1 ? `<label class="f" style="margin:12px 0"><span>Abrir os capítulos de preferência no</span>
       <select class="inp" id="sitePref">
@@ -2655,7 +2911,7 @@ function leituraCfgHTML() {
     ${tituloCfg('Extensão do navegador')}
     <p class="hint" style="margin-top:0">É ela que avisa a Estante qual capítulo você abriu nos sites. ${L.extensaoVista ? '✓ Funcionando. Último contato ' + esc(fmtWhen(L.extensaoVista).toLowerCase()) + '.' : 'Ainda não instalada (ou ainda não abriu nenhum capítulo).'}</p>
     ${L.extensaoVelha ? avisoExtensaoVelha() : ''}
-    <button class="btn" onclick="openExtensao()">🧩 Como instalar</button>
+    <button class="btn" onclick="openExtensao()">Como instalar</button>
     <label class="f" style="margin:14px 0 12px"><span>Onde abrir os capítulos dos sites</span>
       <select class="inp" onchange="pref.set('leitorOnde', this.value)">
         <option value="mesma" ${ondeAbrir() === 'mesma' ? 'selected' : ''}>Na própria janela da Estante (precisa da extensão; o botão “← Estante” volta)</option>
@@ -2664,14 +2920,14 @@ function leituraCfgHTML() {
       </select></label>
     ${tituloCfg('Capítulos novos e dados das séries')}
     <p class="hint" style="margin-top:0">Capa, descrição, gêneros, status e capítulos novos vêm do MangaUpdates, verificado a cada 6 horas. O AniList só completa o que faltar. Além disso, a extensão olha a página de cada série nos seus sites a cada 3 horas, devagar, para saber em qual site cada capítulo saiu primeiro (como o Mihon). Nada disso pede conta.</p>
-    <div class="inline" style="flex-wrap:wrap"><button class="btn" onclick="closeModal();verificarLeitura()">⟳ Procurar capítulos novos agora</button><button class="btn" onclick="closeModal();openImportar()">⇩ Importar sua lista</button>
+    <div class="inline" style="flex-wrap:wrap"><button class="btn" onclick="closeModal();verificarLeitura()">Procurar capítulos novos agora</button><button class="btn" onclick="closeModal();openImportar()">Importar sua lista</button>
       <a class="btn" id="exportarXml" href="/api/leitura/exportar" download style="text-decoration:none" title="Um arquivo XML no formato do MyAnimeList, que a importação da Estante e o AniList aceitam">⇧ Exportar sua lista</a>
-      <button class="btn" id="muTodas" onclick="atualizarTodasDoMu()" title="Capa, descrição, situação, gêneros, autor e nomes alternativos das séries ligadas ao MangaUpdates">⟳ Buscar de novo os dados de todas</button></div>
+      <button class="btn" id="muTodas" onclick="atualizarTodasDoMu()" title="Capa, descrição, situação, gêneros, autor e nomes alternativos das séries ligadas ao MangaUpdates">Buscar de novo os dados de todas</button></div>
     ${tituloCfg('Conta do MangaUpdates (opcional)')}
     <div id="muCfg"><p class="hint" style="margin-top:0">Carregando…</p></div>
     ${tituloCfg('Quadrinhos do seu PC')}
     <p class="hint" style="margin-top:0">Mangás e HQs guardados no computador (CBZ, CBR, PDF ou pastas de imagens), lidos no leitor da própria Estante.</p>
-    <button class="btn" onclick="closeModal();openPastasQuadrinhos()">📁 Escolher pastas</button>
+    <button class="btn" onclick="closeModal();openPastasQuadrinhos()">Escolher pastas</button>
     <div class="checks"><label><input type="checkbox" ${pref.get('leitorAuto', true) ? 'checked' : ''} onchange="pref.set('leitorAuto', this.checked)">No fim de um capítulo, passar sozinho para o próximo (na rolagem contínua)</label></div>`;
 }
 async function acrescentarConhecido(chave) {
@@ -2695,7 +2951,7 @@ function muHTML(m) {
   if (!m.windows) return '<p class="hint" style="margin-top:0">A conta do MangaUpdates só pode ser ligada no Windows, porque o acesso fica protegido pela proteção de dados dele.</p>';
   const explica = '<p class="hint" style="margin-top:0">Ligando a sua conta, o capítulo onde você parou fica igual na Estante, no Mihon do celular e no site, e a situação de cada série (lendo, quero ler, terminado, pausado, larguei) também. A senha é usada só para entrar e não é guardada; fica guardado só o acesso que o MangaUpdates devolve, protegido pelo Windows para o seu usuário. A extensão do navegador nunca recebe esse acesso.</p>';
   if (!m.conectado || m.vencido) {
-    return (m.vencido ? '<div class="aviso" style="margin-bottom:10px"><span>🔑</span><div>O acesso à sua conta do MangaUpdates venceu. Entre de novo quando puder: nada se perdeu, e a Estante continua funcionando enquanto isso.</div></div>' : explica)
+    return (m.vencido ? '<div class="aviso" style="margin-bottom:10px"><div>O acesso à sua conta do MangaUpdates venceu. Entre de novo quando puder: nada se perdeu, e a Estante continua funcionando enquanto isso.</div></div>' : explica)
       + `<div class="inline" style="flex-wrap:wrap"><input class="inp" id="muUsuario" placeholder="Usuário do MangaUpdates" value="${esc(m.usuario || '')}" autocomplete="off" style="max-width:220px">
       <input class="inp" id="muSenha" type="password" placeholder="Senha" autocomplete="new-password" style="max-width:200px" onkeydown="if(event.key==='Enter')muEntrar()">
       <button class="btn primary" id="muEntrarBtn" onclick="muEntrar()">Entrar</button></div>`;
@@ -2703,7 +2959,7 @@ function muHTML(m) {
   const quando = m.ultima ? fmtWhen(m.ultima).toLowerCase() : 'ainda não';
   let h = `<p class="hint" style="margin-top:0">✓ Conta ligada: <b>${esc(m.usuario)}</b>. ${m.sincronizando ? 'Sincronizando agora…' : 'Última sincronização: ' + esc(quando) + '.'}`
     + `${m.na_lista != null ? ' Sua lista lá tem ' + m.na_lista + ' séries.' : ''} A Estante manda o que você leu a cada 5 minutos e lê a sua lista de lá a cada hora.</p>`;
-  if (m.erro) h += `<p class="hint" style="color:#ffb35c">${esc(m.erro)}</p>`;
+  if (m.erro) h += `<p class="hint" style="color:var(--warn)">${esc(m.erro)}</p>`;
   const up = m.ultimo_por;
   if (up && Date.now() / 1000 - up.quando < 7 * 86400) h += `<p class="hint" style="margin:0 0 8px">Da última vez que você clicou em “Pôr na lista”, ${up.postas === 1 ? '1 série entrou' : up.postas + ' séries entraram'} na sua lista do MangaUpdates${up.recusadas.length ? '.' : ', e nenhuma foi recusada.'}</p>
     ${up.recusadas.length ? `<details class="mu-recusadas" style="margin-bottom:8px"><summary>${up.recusadas.length === 1 ? '1 série foi recusada' : up.recusadas.length + ' séries foram recusadas'} pelo MangaUpdates</summary>
@@ -2718,7 +2974,7 @@ function muHTML(m) {
         <button class="btn ghost" onclick="muNaoE(${x.mu_id})">Não é nenhuma</button></div>`).join('');
   }
   if ((m.fora || []).length) h += `<div class="loja-row" style="margin:8px 0"><div class="q"><b>${m.fora.length === 1 ? '1 série da sua lista do MangaUpdates não está' : m.fora.length + ' séries da sua lista do MangaUpdates não estão'} na Estante</b><small>${esc(m.fora.slice(0, 6).map(x => x.titulo).join(', '))}${m.fora.length > 6 ? '…' : ''}</small></div><button class="btn" onclick="muTrazer()">Trazer para a Estante</button></div>`;
-  h += `<div class="inline" style="flex-wrap:wrap"><button class="btn" onclick="muSinc()">⟳ Sincronizar agora</button><button class="btn ghost" onclick="muSair()">Desconectar</button></div>`;
+  h += `<div class="inline" style="flex-wrap:wrap"><button class="btn" onclick="muSinc()">Sincronizar agora</button><button class="btn ghost" onclick="muSair()">Desconectar</button></div>`;
   return h;
 }
 async function muEntrar() {
@@ -2795,7 +3051,7 @@ function desenharAvisoAtu() {
   const mostra = a && a.nova && (a.baixando || A.dispensada !== a.nova.versao);
   el.classList.toggle('show', !!mostra);
   if (!mostra) { el.innerHTML = ''; return; }
-  el.innerHTML = a.baixando || a.esperando_jogo ? `<span>⟳</span><div>${textoAtu(a)}</div>`
+  el.innerHTML = a.baixando || a.esperando_jogo ? `<span></span><div>${textoAtu(a)}</div>`
     : `<span>★</span><div>Saiu a versão <b>${esc(a.nova.versao)}</b> da Estante (você tem a ${esc(a.versao)}).${a.erro ? ' <span class="hint">' + esc(a.erro) + '</span>' : ''}</div>
        ${a.instalada ? `<button class="btn primary sm" onclick="atualizarAgora()">Atualizar</button>`
          : a.nova.pagina ? `<a class="btn sm" href="${esc(a.nova.pagina)}" target="_blank" rel="noopener" style="text-decoration:none">Ver no GitHub</a>` : ''}
@@ -2817,7 +3073,7 @@ async function mostrarAtualizacao(buscar = true) {
       ${a.instalada ? '' : 'Esta cópia roda pelo código-fonte, então a versão nova é baixada à mão pela página do GitHub.'}</p>
     ${textoAtu(a) ? `<p class="hint">${textoAtu(a)}</p>` : ''}
     <div class="inline">${a.nova && a.instalada && !a.baixando ? '<button class="btn primary" onclick="atualizarAgora()">Atualizar agora</button>' : ''}
-      <button class="btn" id="atuVer" onclick="verificarAtualizacao()" ${a.verificando || a.baixando ? 'disabled' : ''}>⟳ Procurar versão nova</button></div>`;
+      <button class="btn" id="atuVer" onclick="verificarAtualizacao()" ${a.verificando || a.baixando ? 'disabled' : ''}>Procurar versão nova</button></div>`;
 }
 async function verificarAtualizacao() {
   const b = $('atuVer'); if (b) { b.disabled = true; b.textContent = 'Procurando…'; }
@@ -2843,7 +3099,7 @@ function baixadosHTML(s) {
       : fila.length ? `<p class="hint">${fila.length === 1 ? '1 capítulo esperando' : fila.length + ' capítulos esperando'} para baixar.</p>` : ''}
     <div class="inline" style="flex-wrap:wrap">
       ${bs.length ? `<button class="btn primary" id="lerBaixado" onclick="abrirBaixado('${s.id}', ${prox})">▶ Ler sem internet (cap. ${esc(capTxt(bs[prox].n))})</button>` : ''}
-      <button class="btn" id="baixarBtn" onclick="openBaixar('${s.id}')">⇩ Baixar capítulos</button>
+      <button class="btn" id="baixarBtn" onclick="openBaixar('${s.id}')">Baixar capítulos</button>
       ${bs.length ? `<button class="btn ghost" onclick="apagarBaixados('${s.id}')">Apagar baixados</button>` : ''}
     </div></div>`;
 }
@@ -3091,7 +3347,7 @@ function desenharFaixa() {
     <button class="tq" onclick="abrirLetra()" title="Ver a letra"><b>${esc(f.titulo)}</b><small>${esc(deOnde(f))}</small></button>
     <div class="tbots">${botoesTocando(false)}</div>
     ${fontesTocandoHTML(f)}
-    <button class="btn sm" onclick="abrirLetra()">♪ Letra</button>`;
+    <button class="btn sm" onclick="abrirLetra()">Letra</button>`;
 }
 // quando duas fontes tocam ao mesmo tempo (o Spotify e um vídeo no navegador, por exemplo), dá para escolher qual mostrar
 const fontesTocandoChave = f => (f.fontes || []).map(x => x.app + (x.tocando ? '>' : '')).join(',') + (f.escolhida ? '*' : '');
@@ -3163,17 +3419,17 @@ function desenharTela() {
   const f = T.faixa;
   if (!f) {
     T.chave = '';
-    $('telaLetra').innerHTML = `<button class="x" onclick="fecharLetra()">×</button><div class="tl-letra"><div class="tl-aviso"><b>Nada tocando agora</b>Quando uma música tocar no Spotify, no YouTube ou no YouTube Music, ela aparece aqui.</div></div>`;
+    $('telaLetra').innerHTML = `<button class="x" onclick="fecharLetra()" aria-label="Fechar">${ic('fechar')}</button><div class="tl-letra"><div class="tl-aviso"><b>Nada tocando agora</b>Quando uma música tocar no Spotify, no YouTube ou no YouTube Music, ela aparece aqui.</div></div>`;
     return;
   }
   if (T.chave !== f.chave) {   // música nova: monta a tela e busca a letra
     T.chave = f.chave; T.letra = null; T.linha = -1;
-    $('telaLetra').innerHTML = `<div class="tl-fundo" id="tlFundo"></div><button class="x" onclick="fecharLetra()" title="Fechar (Esc)">×</button>
+    $('telaLetra').innerHTML = `<div class="tl-fundo" id="tlFundo"></div><button class="x" onclick="fecharLetra()" title="Fechar (Esc)">${ic('fechar')}</button>
       <div class="tl-lado"><div class="tl-capa" id="tlCapa"></div><h2>${esc(f.titulo)}</h2><div class="tl-art">${esc(f.artista)}</div>
         <div class="tl-fonte">${f.anuncio ? 'Propaganda ou vídeo curto · ' : ''}no ${esc(f.fonte)}</div>
         <div class="tl-barra"><span id="tlPos">0:00</span><div class="tl-prog" id="tlBarra" onclick="pularPelaBarra(event)"><i id="tlProg"></i></div><span id="tlDur">${f.duracao ? fmtMin(f.duracao) : ''}</span></div>
         <div class="tbots" id="tlBots"></div><div id="tlFontes"></div>
-        <button class="btn sm ghost tl-hist" onclick="openHistoricoMusicas()">◷ O que tocou hoje</button></div>
+        <button class="btn sm ghost tl-hist" onclick="openHistoricoMusicas()">O que tocou hoje</button></div>
       <div class="tl-letra" id="tlLetra"><div class="spin"></div></div>`;
     $('tlLetra').addEventListener('wheel', () => { T.rolouEm = Date.now(); }, {passive: true});
     $('tlLetra').addEventListener('touchmove', () => { T.rolouEm = Date.now(); }, {passive: true});
@@ -3218,7 +3474,7 @@ function desenharLetra() {
       ? 'Ela pode estar no Genius. O botão abre a página da música numa janela.'
       : 'Ela pode estar no Genius. O botão abre a busca do Genius com o nome da música. (Com a chave gratuita do Genius nas Configurações, ele abre direto a página certa.)', genius);
   } else {
-    el.innerHTML = aviso('Não deu para buscar a letra', esc(l.erro || ''), `<button class="btn" onclick="T.chave='';desenharTela()">⟳ Tentar de novo</button> ${genius}`);
+    el.innerHTML = aviso('Não deu para buscar a letra', esc(l.erro || ''), `<button class="btn" onclick="T.chave='';desenharTela()">Tentar de novo</button> ${genius}`);
   }
   T.linha = -1; el.scrollTop = 0;
 }
@@ -3257,12 +3513,12 @@ async function tocandoCfgHTML() {
   let t = {ligado: true, genius: false, genius_dica: '', disponivel: true, motivo: ''};
   try { t = await api('/api/tocando/config'); } catch (e) {}
   return `${tituloCfg('Tocando agora', true)}
-    <div class="loja-row" style="margin:10px 0"><div class="q"><b>♪ Mostrar o que está tocando</b>
+    <div class="loja-row" style="margin:10px 0"><div class="q"><b>Mostrar o que está tocando</b>
       <small>${t.disponivel ? 'Spotify, YouTube e YouTube Music, numa faixa embaixo da Estante' : esc(t.motivo)}</small></div>
       <label class="sw"><input type="checkbox" ${t.ligado ? 'checked' : ''} onchange="ligarTocando(this.checked)"><span></span></label></div>
     <p class="hint" style="margin-top:0">A Estante vê a música pelo painel de mídia do próprio Windows, o mesmo que aparece quando você aperta as teclas de volume. Ela não pede conta nem senha do Spotify, do YouTube ou de qualquer serviço. As letras vêm do LRCLIB, que é gratuito, e ficam guardadas na pasta dos dados depois da primeira vez.</p>
     <p class="hint">Cada música que toca por 30 segundos entra no histórico, que fica só neste computador.</p>
-    <div class="inline"><button class="btn" onclick="closeModal();openHistoricoMusicas()">◷ O que tocou</button></div>
+    <div class="inline"><button class="btn" onclick="closeModal();openHistoricoMusicas()">O que tocou</button></div>
     ${tituloCfg('Genius (opcional)')}
     <p class="hint" style="margin-top:0">O Genius e o Musixmatch não deixam programas como a Estante mostrarem a letra inteira. Quando o LRCLIB não tem a letra, o botão “Ver no Genius” abre a página da música numa janela. Sem chave, ele abre a busca do Genius com o nome da música. Com a chave gratuita do Genius (uma chave de programa, como a do SteamGridDB, e não a sua conta), ele abre direto a página certa:</p>
     <ol class="steps">

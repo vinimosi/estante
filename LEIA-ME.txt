@@ -48,7 +48,7 @@ SUA SITUAÇÃO, NOTAS E SORTEIO
 
 No painel de cada jogo, logo embaixo do Jogar, dá para marcar a sua situação: Quero jogar, Jogando, Zerei ou Larguei (clicar de novo tira). Quando algum jogo tem situação, a lista do lado ganha a parte "Sua situação", para ver só os jogos de cada uma. Os jogos e as séries também têm "Suas notas", uma caixa para anotar o que quiser (onde parou, dicas, o que achou); a nota é guardada sozinha quando você clica fora da caixa. Juntar dois jogos junta as notas.
 
-O botão 🎲 Sortear, em cima, escolhe um entre os que estão na tela e abre o painel dele. Ele respeita a busca e o filtro escolhido: por exemplo, em "Quero jogar" ele sorteia só entre esses, e na Leitura, em "Com capítulo novo", só entre as séries com capítulo novo.
+O botão Sortear, em cima, escolhe um entre os que estão na tela e abre o painel dele. Ele respeita a busca e o filtro escolhido: por exemplo, em "Quero jogar" ele sorteia só entre esses, e na Leitura, em "Com capítulo novo", só entre as séries com capítulo novo.
 
 ESTATÍSTICAS
 
@@ -56,7 +56,7 @@ As duas estantes têm "Estatísticas" na lista do lado. Nos Jogos: o tempo dos �
 
 MODO TV
 
-O botão 📺, em cima, abre a estante em tela cheia, com capas grandes, para usar de longe com um controle de videogame (Xbox, PlayStation ou outro que o Windows reconheça). O direcional ou a alavanca escolhem, A joga o jogo ou abre o próximo capítulo da série, X sorteia, LB ou RB trocam entre Jogos e Leitura, e B sai. Com a Estante aberta na tela, apertar Start no controle também abre o modo TV. No teclado, as setas escolhem, Enter abre, Tab troca de estante e Esc sai. O modo TV mostra os mesmos jogos ou séries que estavam na tela, com a busca e o filtro escolhidos. Não precisa instalar nada: o próprio navegador lê o controle.
+O botão com o desenho de uma TV, em cima, abre a estante em tela cheia, com capas grandes, para usar de longe com um controle de videogame (Xbox, PlayStation ou outro que o Windows reconheça). O direcional ou a alavanca escolhem, A joga o jogo ou abre o próximo capítulo da série, X sorteia, LB ou RB trocam entre Jogos e Leitura, e B sai. Com a Estante aberta na tela, apertar Start no controle também abre o modo TV. No teclado, as setas escolhem, Enter abre, Tab troca de estante e Esc sai. O modo TV mostra os mesmos jogos ou séries que estavam na tela, com a busca e o filtro escolhidos. Não precisa instalar nada: o próprio navegador lê o controle.
 
 JOGOS QUE NÃO VÊM DE LOJA
 
@@ -68,7 +68,7 @@ Ao escanear uma pasta, deixe marcada a opção "Acompanhar esta pasta". A partir
 
 COLEÇÕES E SUBCOLEÇÕES
 
-As coleções podem ter subcoleções. Para criar uma, use a barra no nome: RPG/Ação fica dentro de RPG. Na barra lateral, uma coleção com subcoleções tem uma setinha que abre e fecha, e clicar na coleção mostra também os jogos das subcoleções. Renomear ou apagar uma coleção leva junto as subcoleções dela. Nas Configurações, em "Pastas acompanhadas", a opção "Criar e manter coleções seguindo as pastas" faz cada jogo das pastas acompanhadas entrar na coleção das pastas dele: um jogo em D:\Jogos\RPG\Ação\Nome do Jogo entra em RPG, subcoleção Ação. Se você mudar o jogo de pasta, ele muda de coleção sozinho. Essas coleções aparecem com 📁 e ficam separadas das que você criou à mão, que nunca são mexidas. Se tirar um jogo de uma coleção de pasta, ele não volta sozinho para ela. As coleções antigas que tinham uma barra no nome passaram a usar um traço (Ação/Aventura virou Ação - Aventura), para não virarem subcoleções sem você querer. A Estante guardou uma cópia da sua lista de jogos de antes dessa mudança, no arquivo library-antes-v3.json.
+As coleções podem ter subcoleções. Para criar uma, use a barra no nome: RPG/Ação fica dentro de RPG. Na barra lateral, uma coleção com subcoleções tem uma setinha que abre e fecha, e clicar na coleção mostra também os jogos das subcoleções. Renomear ou apagar uma coleção leva junto as subcoleções dela. Nas Configurações, em "Pastas acompanhadas", a opção "Criar e manter coleções seguindo as pastas" faz cada jogo das pastas acompanhadas entrar na coleção das pastas dele: um jogo em D:\Jogos\RPG\Ação\Nome do Jogo entra em RPG, subcoleção Ação. Se você mudar o jogo de pasta, ele muda de coleção sozinho. Essas coleções aparecem com o desenho de uma pasta e ficam separadas das que você criou à mão, que nunca são mexidas. Se tirar um jogo de uma coleção de pasta, ele não volta sozinho para ela. As coleções antigas que tinham uma barra no nome passaram a usar um traço (Ação/Aventura virou Ação - Aventura), para não virarem subcoleções sem você querer. A Estante guardou uma cópia da sua lista de jogos de antes dessa mudança, no arquivo library-antes-v3.json.
 
 Quando um jogo que não é de loja é apagado ou tirado da pasta, ele sai da estante sozinho. A exceção são jogos num HD externo desconectado, que continuam na estante até o HD ser ligado de novo.
 
@@ -76,7 +76,7 @@ O tempo jogado é contado sempre que você abre o jogo pela Estante. Jogos abert
 
 WAND (TRAINERS)
 
-Se o Wand (o antigo WeMod) estiver instalado, a Estante mostra quais jogos seus têm trainer nele. Esses jogos ganham o selo "✦ Wand" na capa, e na barra lateral aparece a lista "Com trainer (Wand)". No painel do jogo aparecem o botão "Jogar com Wand", que abre o jogo pelo Wand já com o trainer, e o "Ver no Wand", que abre a página do jogo dentro do Wand. Ali também fica a opção "Jogar sempre pelo Wand": com ela ligada, o próprio botão Jogar passa a abrir pelo Wand. O tempo jogado continua sendo contado do mesmo jeito, a partir do momento em que o jogo aparece rodando.
+Se o Wand (o antigo WeMod) estiver instalado, a Estante mostra quais jogos seus têm trainer nele. Esses jogos ganham o selo "Wand" na capa, e na barra lateral aparece a lista "Com trainer (Wand)". No painel do jogo aparecem o botão "Jogar com Wand", que abre o jogo pelo Wand já com o trainer, e o "Ver no Wand", que abre a página do jogo dentro do Wand. Ali também fica a opção "Jogar sempre pelo Wand": com ela ligada, o próprio botão Jogar passa a abrir pelo Wand. O tempo jogado continua sendo contado do mesmo jeito, a partir do momento em que o jogo aparece rodando.
 
 Para saber quais jogos têm trainer, a Estante usa a mesma lista pública de jogos que o próprio Wand baixa, sem conta e sem senha, e atualiza essa lista uma vez por dia. Ela só conta a versão que você tem: se o Wand tem trainer para a versão da Steam de um jogo, mas não para a da GOG, e o seu é da GOG, ele fica sem o selo. Jogos que não vêm de loja só são reconhecidos quando o executável deles é o mesmo que o Wand conhece. Se o Wand não tem o jogo, ele fica como está. Os jogos da Battle.net não entram, porque o Wand não tem trainers para eles.
 
@@ -177,6 +177,12 @@ LER SEM INTERNET
 Dá para baixar capítulos da WeebCentral (weebcentral.com) e ler no leitor da Estante, sem internet. No painel de uma série, na parte "Sem internet", clique em "Baixar capítulos". A Estante procura a série na WeebCentral pelo nome e pelos nomes alternativos, e quando não tem certeza mostra as parecidas para você escolher ("Não é esta série?" troca depois). Escolha os próximos 5 ou 10 capítulos, todos os que você ainda não leu, ou uma faixa, como do 10 ao 20. Ela baixa um capítulo de cada vez, devagar, do mesmo jeito que o Mihon faz, e você pode continuar usando a Estante enquanto isso; o painel mostra o andamento. Depois, "Ler sem internet" abre o próximo capítulo baixado no mesmo leitor dos quadrinhos do PC, com os mesmos jeitos de ler. Chegar ao fim de um capítulo conta como lido, como nos sites, e vai para a sua conta do MangaUpdates se ela estiver ligada.
 
 Cada capítulo ocupa uns 10 a 30 MB, na pasta "baixados" dos seus dados. Em Configurações > Geral aparece quanto espaço eles ocupam, com botões para apagar os que você já leu ou todos; no painel da série, "Apagar baixados" faz o mesmo só para ela. Os baixados não entram nas cópias de segurança. O Comix e alguns outros sites não entram, porque eles têm proteções contra programas, e a Estante não passa por elas. Se a WeebCentral recusar ou pedir uma verificação, o download para e avisa; é só tentar de novo mais tarde.
+
+APARÊNCIA
+
+A Estante tem um visual próprio: fundo grafite, os nomes das obras em letra de livro e uma única cor de destaque, um vermelho-alaranjado, para o que dá para clicar ou é novidade (Jogar, Ler, capítulo novo). Em cima de cada estante fica o que você está jogando ou lendo agora, grande, com a arte ao fundo e os outros ao lado. Na Leitura, o número do capítulo onde você parou aparece em destaque, e cada capa ganha embaixo uma linha fina que mostra quanto falta ler.
+
+Em Configurações > Geral > Aparência dá para escolher entre escura, clara ou igual ao Windows (muda sozinha quando o Windows muda). O leitor, a tela da letra e o modo TV continuam sempre escuros, para não cansar a vista. A escolha vale para este computador.
 
 ONDE FICAM SEUS DADOS
 
