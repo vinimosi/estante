@@ -6,6 +6,7 @@ _PROJ = str(_P(__file__).resolve().parent.parent)
 _SAIDA = _os.environ.get("ESTANTE_TESTES_SAIDA") or str(_P(_tf.gettempdir()) / "estante-testes")
 import io
 import json
+import urllib.parse
 import os
 import sys
 import time
@@ -315,6 +316,26 @@ check(esperar(lambda: app.find_game(app.get_lib(), g["id"]).get("description")),
 g = app.find_game(app.get_lib(), g["id"])
 check(g["developer"] == "Team Cherry" and g["year"] == 2017 and g["genres"] == ["Ação", "Indie"], "criador, ano e gêneros")
 check(app.steam_por_nome("Hollow") is None, "nome que não bate certinho não é aceito")
+buscas = []
+
+
+def steam_nomes(url, limit=0, headers=None):
+    termo = urllib.parse.unquote(url.split("term=")[1].split("&")[0])
+    buscas.append(termo)
+    acha = {"Seeking Closure": ("Seeking Closure", 11), "Selara": ("Selara", 12), "The Promise The Beginning": ("The Promise: The Beginning", 13)}
+    nome, i = acha.get(termo, ("Outro Jogo", 99))
+    return json.dumps({"items": [{"type": "app", "name": nome, "id": i}]}), url
+
+
+app._get_text = steam_nomes
+check(app.steam_por_nome("SeekingClosure") == "11" and buscas == ["SeekingClosure", "Seeking Closure"],
+      "nome com as palavras grudadas: procura de novo separado (a Steam não acha junto)")
+check(app.steam_por_nome("Selara-Update9") == "12" and app.steam_por_nome("ThePromise-TheBeginning0 95") == "13",
+      "e sem a versão no fim (Update9, 0 95)")
+buscas.clear()
+check(app.steam_por_nome("Portal 2") is None and buscas == ["Portal 2"], "número que faz parte do nome fica (Portal 2 não vira Portal)")
+check(app.nomes_para_busca("Saga v1.2")[-1] == "Saga" and app.nomes_para_busca("RPGMaker")[-1] == "RPG Maker", "v1.2 sai e siglas se separam certo")
+app._get_text = steam_falsa
 check(g["dados_de"] == "steam", "o jogo sabe que os dados vieram da Steam")
 g2 = c.post(f"/api/games/{g['id']}/nao-e-este").get_json()
 check(not g2["description"] and not g2["developer"] and g2["nunca_steam"], "“Não é este jogo?” tira os dados da Steam")

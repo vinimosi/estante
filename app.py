@@ -541,20 +541,38 @@ def _gog_meta(gid):
 _steam_busca_cache = {}
 
 
+def nomes_para_busca(nome):
+    """O nome como veio e, se forem diferentes, arrumado para a busca da Steam: palavras grudadas separadas
+    ("SeekingClosure" -> "Seeking Closure", que a busca da Steam não acha junto) e sem a versão no fim
+    ("Selara-Update9" -> "Selara", "TheBeginning0 95" -> "The Beginning"). "Portal 2" fica como está."""
+    n = re.sub(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", " ", nome or "")
+    n = re.sub(r"\s+", " ", re.sub(r"[_\-]+", " ", n)).strip()
+    sem = re.sub(r"\s*(?:\b(?:update|upd|v|ver|version|ep|episode|ch|chapter|build)\s*\d+(?:[. ]\d+)*|(?<=[a-z])\d+(?:[. ]\d+)+"
+                 r"|\s\d+(?:\.\d+)+)$", "", n, flags=re.I).strip()
+    out = []
+    for x in (nome or "", n, sem):
+        if len(_clean(x)) >= 2 and x not in out:
+            out.append(x)
+    return out
+
+
 def steam_por_nome(nome):
     """Procura o jogo na loja pública da Steam pelo nome (sem chave nem login).
-    Só aceita quando o nome bate certinho, para não pegar um jogo errado."""
+    Só aceita quando o nome bate certinho, para não pegar um jogo errado; se não achar, tenta o nome arrumado."""
     alvo = _clean(nome or "")
     if len(alvo) < 2:
         return None
     if alvo in _steam_busca_cache:
         return _steam_busca_cache[alvo]
-    txt, _ = _get_text("https://store.steampowered.com/api/storesearch/?term="
-                       + urllib.parse.quote(nome) + "&l=brazilian&cc=BR")
     achado = None
-    for it in json.loads(txt).get("items") or []:
-        if it.get("type", "app") == "app" and _clean(it.get("name", "")) == alvo:
-            achado = str(it.get("id"))
+    for termo in nomes_para_busca(nome):
+        txt, _ = _get_text("https://store.steampowered.com/api/storesearch/?term="
+                           + urllib.parse.quote(termo) + "&l=brazilian&cc=BR")
+        for it in json.loads(txt).get("items") or []:
+            if it.get("type", "app") == "app" and _clean(it.get("name", "")) == _clean(termo):
+                achado = str(it.get("id"))
+                break
+        if achado:
             break
     _steam_busca_cache[alvo] = achado
     return achado
