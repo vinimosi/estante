@@ -584,6 +584,25 @@ with sync_playwright() as p:
     time.sleep(2)
     check(len(sw.evaluate("(self.__avisos || []).filter(Boolean)")) == 2, "olhar de novo não repete o aviso")
 
+    print("Vários sites ao mesmo tempo, devagar dentro de cada um")
+    r = sw.evaluate("""(async () => {
+      const log = [], t0 = Date.now();
+      const itens = ['a', 'b', 'a', 'c', 'a', 'b', 'a'].map((h, i) => ({url: `https://${h}.test/s/${i}`, i}));
+      const resto = await emCadaSite(itens, 3, async (it, host) => {
+        log.push({host, i: it.i, ini: Date.now() - t0});
+        await new Promise(r => setTimeout(r, 100));
+        return it.i !== 3;
+      }, () => 300);
+      return {log, resto: resto.map(x => x.i), total: Date.now() - t0};
+    })()""")
+    por = {}
+    for x in r["log"]:
+        por.setdefault(x["host"], []).append(x)
+    check([x["i"] for x in por["a.test"]] == [0, 2, 4] and r["resto"] == [6], f"até 3 por site, na ordem; o resto fica para depois {r['resto']}")
+    check(all(x["ini"] < 200 for x in (por["a.test"][0], por["b.test"][0], por["c.test"][0])), "os três sites começam juntos")
+    check(all(b["ini"] - a["ini"] >= 390 for a, b in zip(por["a.test"], por["a.test"][1:])), "dentro do mesmo site, um de cada vez com pausa")
+    check(r["total"] < 1500, f"tudo em menos tempo do que um site depois do outro ({r['total']} ms)")
+
     print("Com a Estante fechada")
     estante.shutdown()
     PAG[("asurascans.com", "/")] = PAG[("asurascans.com", "/")].replace("/chapter/21", "/chapter/22")

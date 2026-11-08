@@ -173,6 +173,26 @@ function capitulosDoHtml(html, base, site, slug) {
   mesmos.forEach(x => { unicos[x.i.num] = x.url; });
   return Object.entries(unicos).map(([n, url]) => ({n: parseFloat(n), url}));
 }
+// Como o Mihon: cada site tem a sua fila e vai devagar (uma página por vez, com pausa), mas os sites andam
+// ao mesmo tempo. Pega até `porSite` itens de cada site, na ordem da lista; devolve os que ficaram para depois.
+// `fazer` responde se chegou a pedir a página ao site (só aí vem a pausa antes do próximo do mesmo site).
+async function emCadaSite(itens, porSite, fazer, pausa) {
+  const grupos = {}, resto = [];
+  for (const it of itens) {
+    let host;
+    try { host = new URL(it.url).hostname; } catch (e) { continue; }
+    const g = grupos[host] || (grupos[host] = []);
+    if (g.length < porSite) g.push(it); else resto.push(it);
+  }
+  await Promise.all(Object.entries(grupos).map(async ([host, lista]) => {
+    for (let i = 0; i < lista.length; i++) {
+      const pediu = await fazer(lista[i], host);
+      if (pediu && i < lista.length - 1) await new Promise(res => setTimeout(res, pausa()));
+    }
+  }));
+  return resto;
+}
+
 async function verificarSites() {
   if (verificando) return;
   verificando = true;
@@ -190,22 +210,18 @@ async function verificarSites() {
       await chrome.storage.local.set({ultimaVerif: agora});
     }
     const regras = Object.fromEntries(sites.map(s => [s.chave, s]));
-    for (let k = 0; k < 5 && verif.lista.length; k++) {
-      const it = verif.lista.shift();
-      const site = regras[it.site];
-      let host;
-      try { host = new URL(it.url).hostname; } catch (e) { continue; }
-      if (!site || verif.bloqueados.includes(host)) continue;
-      if (!(await chrome.permissions.contains({origins: [`*://${host}/*`]}).catch(() => false))) continue;
+    verif.lista = await emCadaSite(verif.lista.filter(it => regras[it.site]), 5, async (it, host) => {
+      if (verif.bloqueados.includes(host)) return false;
+      if (!(await chrome.permissions.contains({origins: [`*://${host}/*`]}).catch(() => false))) return false;
       try {
         const r = await fetch(it.url, {credentials: 'include'});
         const html = r.ok ? await r.text() : '';
-        if (!r.ok || (html.length < 60000 && /challenge-platform|cf-chl|Just a moment/i.test(html))) { verif.bloqueados.push(host); continue; }
-        const caps = capitulosDoHtml(html, r.url, site, it.slug);
+        if (!r.ok || (html.length < 60000 && /challenge-platform|cf-chl|Just a moment/i.test(html))) { verif.bloqueados.push(host); return true; }
+        const caps = capitulosDoHtml(html, r.url, regras[it.site], it.slug);
         if (caps.length) await enviar({url: r.url, capitulos: caps, verificacao: true});
       } catch (e) { /* site fora do ar: segue */ }
-      await new Promise(res => setTimeout(res, 1500 + Math.random() * 3500));
-    }
+      return true;
+    }, () => 1500 + Math.random() * 3500);
     await chrome.storage.local.set({verif});
   } finally {
     verificando = false;
@@ -285,18 +301,19 @@ async function verificarAtualizacoes(forcar) {
     if (!forcar && agora - ultimasAtualizacoes < INTERVALO_ATUALIZACOES) return;
     await chrome.storage.local.set({ultimasAtualizacoes: agora});
     const novos = [];
-    for (const site of sites) {
-      if (!site.atualizacoes || !site.dominio) continue;
+    // uma página por site, todos os sites ao mesmo tempo
+    await Promise.all(sites.map(async site => {
+      if (!site.atualizacoes || !site.dominio) return;
       const origem = `*://${site.dominio}/*`;
-      if (!(await chrome.permissions.contains({origins: [origem]}).catch(() => false))) continue;
+      if (!(await chrome.permissions.contains({origins: [origem]}).catch(() => false))) return;
       let html = '', base = '';
       try {
         const raiz = bases[site.chave] || `https://${site.dominio}/`;
         const r = await fetch(new URL(site.atualizacoes.endereco || '/', raiz).href, {credentials: 'include'});
         html = r.ok ? await r.text() : '';
         base = r.url;
-      } catch (e) { continue; }  // site fora do ar: tenta na próxima volta
-      if (!html || (html.length < 60000 && /challenge-platform|cf-chl|Just a moment|Verify you're human/i.test(html))) continue;  // verificação de robô: pula
+      } catch (e) { return; }  // site fora do ar: tenta na próxima volta
+      if (!html || (html.length < 60000 && /challenge-platform|cf-chl|Just a moment|Verify you're human/i.test(html))) return;  // verificação de robô: pula
       const porSerie = {};
       for (const it of itensDaPagina(html, base, site)) {
         const s = serieDoItem(minhas, site.chave, it);
@@ -317,7 +334,7 @@ async function verificarAtualizacoes(forcar) {
         }
         if (s.lendo && antes > 0) novos.push({nome: s.nome, n, siteNome: site.nome, url: caps[n] || pagina});
       }
-    }
+    }));
     await chrome.storage.local.set({conhecido, abrirSeries});
     await avisar(novos);
     await abrirPaginasDeSerie();
@@ -326,25 +343,35 @@ async function verificarAtualizacoes(forcar) {
   }
 }
 
+let abrindo = false;
 async function abrirPaginasDeSerie() {
-  let {abrirSeries = [], sites = []} = await chrome.storage.local.get(['abrirSeries', 'sites']);
-  const regras = Object.fromEntries(sites.map(s => [s.chave, s]));
-  const resto = [];
-  for (let k = 0; k < abrirSeries.length; k++) {
-    const it = abrirSeries[k];
-    if (k >= 8) { resto.push(it); continue; }  // devagar: o resto fica para o próximo minuto
-    try {
-      const r = await fetch(it.url, {credentials: 'include'});
-      const html = r.ok ? await r.text() : '';
-      const caps = html ? capitulosDoHtml(html, r.url, regras[it.site] || {}, it.slug) : [];
-      if (caps.length) await enviar({url: r.url, capitulos: caps, verificacao: true, novo: true});
-      else if (++it.tentativas < 3) resto.push(it);
-    } catch (e) {
-      if (++it.tentativas < 3) resto.push(it);
-    }
-    await new Promise(res => setTimeout(res, 1500 + Math.random() * 2500));
+  if (abrindo) return;
+  abrindo = true;
+  try {
+    let {abrirSeries = [], sites = []} = await chrome.storage.local.get(['abrirSeries', 'sites']);
+    if (!abrirSeries.length) return;
+    const regras = Object.fromEntries(sites.map(s => [s.chave, s]));
+    const falhas = [];
+    // devagar dentro de cada site (até 8 por minuto), os sites ao mesmo tempo; o resto fica para o próximo minuto
+    const resto = await emCadaSite(abrirSeries, 8, async it => {
+      try {
+        const r = await fetch(it.url, {credentials: 'include'});
+        const html = r.ok ? await r.text() : '';
+        const caps = html ? capitulosDoHtml(html, r.url, regras[it.site] || {}, it.slug) : [];
+        if (caps.length) await enviar({url: r.url, capitulos: caps, verificacao: true, novo: true});
+        else if (++it.tentativas < 3) falhas.push(it);
+      } catch (e) {
+        if (++it.tentativas < 3) falhas.push(it);
+      }
+      return true;
+    }, () => 1500 + Math.random() * 2500);
+    // páginas pedidas pela volta de atualizações enquanto esta rodava não se perdem
+    const {abrirSeries: agora = []} = await chrome.storage.local.get('abrirSeries');
+    const novas = agora.filter(x => !abrirSeries.some(y => y.id === x.id && y.site === x.site));
+    await chrome.storage.local.set({abrirSeries: [...falhas, ...resto, ...novas]});
+  } finally {
+    abrindo = false;
   }
-  await chrome.storage.local.set({abrirSeries: resto});
 }
 
 chrome.notifications && chrome.notifications.onClicked.addListener(id => {

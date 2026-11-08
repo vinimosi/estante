@@ -1580,6 +1580,7 @@ def game_out(g):
     d["sessoes_recentes"] = sorted(sess)[-5:][::-1]
     d["semana"] = sum(s for t, s in sess if t >= time.time() - SEMANA)
     d["running"] = g["id"] in running
+    d["running_desde"] = running.get(g["id"])  # a tela conta o tempo da sessão ao vivo
     d["cover_url"] = f"/covers/{g['cover']}" if g.get("cover") else None
     if g.get("loja"):
         d["missing"] = bool(g.get("pasta_jogo")) and not os.path.isdir(g["pasta_jogo"]) and not _unidade_ausente(g["pasta_jogo"])

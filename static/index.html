@@ -621,6 +621,83 @@ body.com-tocando .toasts{bottom:86px}
   .tl-letra p{font-size:22px}
 }
 @media (max-width:700px){.est .stats{grid-template-columns:repeat(2,1fr);gap:0 18px}}
+
+/* ---------- movimento: curto e discreto; some com "reduzir animações" do Windows (regra logo abaixo) ---------- */
+/* entrar numa estante ou numa parte dela: os cartões chegam em sequência rápida */
+.grid.entra>.card{animation:entra .42s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0) * 18ms - var(--ja,0ms))}
+@keyframes entra{from{opacity:0;transform:translateY(12px)}}
+.content.troca{animation:troca .3s cubic-bezier(.2,.7,.3,1) both}
+@keyframes troca{from{opacity:0;transform:translateY(6px)}}
+/* ao vivo: o jogo aberto e os capítulos que acabaram de chegar */
+.ponto-vivo{display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px;animation:pulsa 1.8s ease-in-out infinite}
+@keyframes pulsa{50%{opacity:.25}}
+.relogio{font-variant-numeric:tabular-nums}
+.card.chegou .cover{animation:chegou 1.3s ease-in-out 3}
+@keyframes chegou{50%{box-shadow:0 0 0 2px var(--accent),var(--sombra-capa)}}
+.card.chegou .badge.cnovo{animation:pula .5s cubic-bezier(.3,1.6,.5,1) .1s both}
+@keyframes pula{from{transform:scale(.6)}}
+/* tocando: a barra anda macia e as ondas mexem enquanto toca */
+.tocando .tprog i{transition:width .26s linear}
+.ondas{display:inline-flex;align-items:flex-end;gap:2px;height:11px;margin-right:7px;vertical-align:-1px}
+.ondas i{width:2px;height:100%;background:var(--accent);border-radius:1px;transform-origin:bottom;transform:scaleY(.3)}
+.ondas.on i{animation:onda 1s ease-in-out infinite}
+.ondas.on i:nth-child(2){animation-delay:-.35s}
+.ondas.on i:nth-child(3){animation-delay:-.7s}
+@keyframes onda{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+/* cor da capa: um brilho no alto da estante, na cor da capa do destaque ou do cartão sob o mouse */
+@property --brilho{syntax:"<color>";inherits:true;initial-value:transparent}
+.content{background:radial-gradient(70% 380px at 60% 0,var(--brilho),transparent) no-repeat;background-attachment:local;transition:--brilho .7s ease}
+/* estatísticas: os números contam até o valor e as barras crescem */
+.est.anima .stat b{animation:troca .4s cubic-bezier(.2,.7,.3,1) both}
+.est.anima .barra i{transform-origin:bottom;animation:cresce .7s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0) * 35ms)}
+@keyframes cresce{from{transform:scaleY(0)}}
+.est.anima .topo .tr i{transform-origin:left;animation:estica .8s cubic-bezier(.2,.7,.3,1) both;animation-delay:calc(var(--i,0) * 60ms + .15s)}
+@keyframes estica{from{transform:scaleX(0)}}
+
+/* ---------- indicações da Leitura: clima, escolha da semana, maratona, esquecidas, parecidas e retrospectiva ---------- */
+.paravc{margin:0 0 10px}
+.pv{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:22px;margin:0 0 34px}
+.pv>div{background:var(--panel);border-radius:6px;padding:18px 20px 20px}
+.pv-kick,.r-kick{font-family:var(--f-rot);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);margin-bottom:12px}
+.pv .chips{margin-bottom:18px}
+.chip.clima{padding:5px 11px;cursor:pointer;color:var(--muted);transition:background .12s,color .12s}
+.chip.clima:hover{color:var(--text)}
+.chip.clima.on{background:var(--accent);color:var(--on-accent)}
+.ind{display:flex;gap:18px;align-items:flex-start;animation:troca .3s cubic-bezier(.2,.7,.3,1) both}
+.ind>.cover{width:112px;flex:none}
+.ind-t{min-width:0}
+.ind-t b{display:block;font-family:var(--f-tit);font-size:20px;font-weight:600;line-height:1.2;margin-bottom:6px}
+.ind-t small{display:block;color:var(--muted);font-size:13px;line-height:1.45}
+.ind-info{display:flex;flex-wrap:wrap;gap:4px 12px;margin:10px 0 14px;font-family:var(--f-rot);font-size:12.5px;color:var(--dim)}
+.ind .acts,.fi-acts{display:flex;gap:8px;flex-wrap:wrap}
+.fila{display:grid;grid-auto-flow:column;grid-auto-columns:128px;gap:18px;overflow-x:auto;padding:2px 2px 10px;margin:0 0 30px}
+.fi{min-width:0}
+.fi-capa{display:block;width:100%;padding:0;border:0;cursor:pointer;background:var(--panel2)}
+.fi b{display:block;font-size:13px;font-weight:600;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi small{display:block;font-size:12px;color:var(--dim);margin:2px 0 8px;line-height:1.35}
+.drawer .fila{grid-auto-columns:100px;margin:0}
+.toast.prox{align-items:center;gap:14px;max-width:440px}
+.toast.prox>.cover{width:54px;flex:none}
+.toast.prox b{display:block;font-size:12.5px;font-weight:500;color:var(--muted)}
+.toast.prox span{display:block;font-family:var(--f-tit);font-size:16px;font-weight:600;margin:2px 0 8px}
+.retro{text-align:center;padding:4px 26px 0}
+.retro-top{display:flex;justify-content:center;gap:8px;margin-bottom:6px}
+.retro-slide{min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:troca .35s cubic-bezier(.2,.7,.3,1) both}
+.r-big{font-family:var(--f-rot);font-size:78px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.r-nome{font-family:var(--f-tit);font-size:28px;font-weight:600;line-height:1.2;max-width:520px}
+.retro-slide p{margin:0;color:var(--muted);max-width:440px;line-height:1.5}
+.retro-slide>.cover{width:150px}
+.r-capas{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;max-width:560px}
+.r-capas .cover{width:78px}
+.r-lista{list-style:none;padding:0;margin:4px 0 0;text-align:left;width:min(440px,100%);counter-reset:r}
+.r-lista li{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-top:1px solid var(--line);counter-increment:r}
+.r-lista li::before{content:counter(r);font-family:var(--f-rot);color:var(--accent2);width:16px}
+.r-lista li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r-lista li small{font-family:var(--f-rot);color:var(--dim)}
+.r-pontos{display:flex;gap:7px;justify-content:center;margin:16px 0 2px}
+.r-pontos i{width:7px;height:7px;border-radius:50%;background:var(--line2);transition:background .2s}
+.r-pontos i.on{background:var(--accent)}
+@media (max-width:900px){.pv{grid-template-columns:1fr}}
 @media (max-width:900px){.tv-dicas{display:none}.tv-topo,.tv-grade{padding-left:16px;padding-right:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
 </style>
@@ -764,6 +841,106 @@ function fmtTime(sec) {
   if (!h) return m + ' min';
   return h + ' h' + (m ? ' ' + m + ' min' : '');
 }
+// ---------- movimento (o CSS fica em "movimento", no fim do <style>) ----------
+const calmo = () => matchMedia('(prefers-reduced-motion: reduce)').matches;   // "reduzir animações" do Windows
+// relógio da sessão do jogo aberto: qualquer elemento com data-desde (segundos) mostra o tempo desde ali, ao vivo
+const fmtRelogio = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s % 60).padStart(2, '0'); };
+const relogioHTML = desde => desde ? `<span class="relogio" data-desde="${desde}">${fmtRelogio(Date.now() / 1000 - desde)}</span>` : '';
+setInterval(() => {
+  if (document.hidden) return;
+  for (const el of document.querySelectorAll('[data-desde]')) el.textContent = fmtRelogio(Date.now() / 1000 - +el.dataset.desde);
+}, 1000);
+// a "tela" que está aberta: mudou (outra estante, outra parte da barra lateral) = os cartões entram;
+// a mesma (buscou, filtrou, mudou a ordem, chegou dado novo) = os cartões deslizam até o lugar novo
+const chaveTela = () => [S.estante, S.view.type, S.view.tag || ''].join('|');
+function desenharConteudo(html, tela) {
+  const c = $('content'), mesma = c.dataset.tela === tela, outraEstante = (c.dataset.tela || '').split('|')[0] !== tela.split('|')[0];
+  const antes = mesma && !calmo() && Date.now() - (c.entrouEm || 0) >= 900 ? posicoesCartoes() : null;
+  c.innerHTML = html;
+  c.dataset.tela = tela;
+  if (calmo()) return;
+  // redesenhou logo depois de entrar (ao abrir, a Estante desenha de novo quando acaba de ler as lojas):
+  // a entrada continua de onde estava, em vez de ser cortada ou começar de novo
+  const ja = Date.now() - (c.entrouEm || 0), entrando = !mesma || ja < 900;
+  if (entrando) {
+    if (!mesma) c.entrouEm = Date.now();
+    c.style.setProperty('--ja', (mesma ? ja : 0) + 'ms');
+    const g = c.querySelector('.grid');
+    if (g) { [...g.children].forEach((el, i) => el.style.setProperty('--i', Math.min(i, 30))); g.classList.add('entra'); }
+    if (outraEstante) { c.classList.remove('troca'); void c.offsetWidth; c.classList.add('troca'); }
+  } else if (antes) deslizarCartoes(antes);
+}
+function posicoesCartoes() {
+  const m = new Map(), c = $('content'), r0 = c.getBoundingClientRect();
+  for (const el of c.querySelectorAll('.grid>.card')) {
+    const r = el.getBoundingClientRect();
+    if (r.bottom > r0.top - 300 && r.top < r0.bottom + 300) m.set(el.dataset.id, r);   // só os que estão perto da vista
+  }
+  return m;
+}
+function deslizarCartoes(antes) {
+  const r0 = $('content').getBoundingClientRect(), mov = {duration: 340, easing: 'cubic-bezier(.2,.7,.3,1)'};
+  for (const el of $('content').querySelectorAll('.grid>.card')) {
+    const r = el.getBoundingClientRect();
+    if (r.bottom < r0.top - 300 || r.top > r0.bottom + 300) continue;
+    const a = antes.get(el.dataset.id);
+    if (!a) { el.animate([{opacity: 0, transform: 'scale(.94)'}, {opacity: 1, transform: 'none'}], {...mov, duration: 260}); continue; }
+    const dx = a.left - r.left, dy = a.top - r.top;
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) el.animate([{transform: `translate(${dx}px,${dy}px)`}, {transform: 'none'}], mov);
+  }
+}
+// a cor de uma capa (média das cores mais vivas da capa pequena), guardada para não calcular de novo
+const CORES = new Map();
+function corDaCapa(url) {
+  if (!url) return Promise.resolve('');
+  if (CORES.has(url)) return CORES.get(url);
+  const p = new Promise(ok => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 12;
+        const cx = cv.getContext('2d', {willReadFrequently: true}); cx.drawImage(img, 0, 0, 12, 12);
+        const px = cx.getImageData(0, 0, 12, 12).data; let r = 0, g = 0, b = 0, peso = 0;
+        for (let i = 0; i < px.length; i += 4) {
+          const mx = Math.max(px[i], px[i + 1], px[i + 2]), mn = Math.min(px[i], px[i + 1], px[i + 2]), w = (mx - mn) / 255 + .05;
+          r += px[i] * w; g += px[i + 1] * w; b += px[i + 2] * w; peso += w;
+        }
+        ok(`rgb(${Math.round(r / peso)} ${Math.round(g / peso)} ${Math.round(b / peso)} / .2)`);
+      } catch (e) { ok(''); }
+    };
+    img.onerror = () => ok('');
+    img.src = capaMini(url);
+  });
+  CORES.set(url, p);
+  return p;
+}
+let corBase = '', corT = null;
+function brilho(cor) { $('content').style.setProperty('--brilho', cor || 'transparent'); }
+// o brilho segue o cartão sob o mouse e volta para a cor do destaque quando o mouse sai
+$('content').addEventListener('mouseover', e => {
+  const card = e.target.closest('.grid>.card');
+  clearTimeout(corT);
+  corT = setTimeout(async () => {
+    const it = card && byId(card.dataset.id);
+    brilho(it && it.cover_url ? await corDaCapa(it.cover_url) : corBase);
+  }, card ? 140 : 400);
+});
+async function brilhoDoDestaque(item) {
+  corBase = item && item.cover_url ? await corDaCapa(item.cover_url) : '';
+  brilho(corBase);
+}
+// números que contam até o valor (só os que são um número inteiro, como 1.234)
+function contarAte(el, ate, de = 0, ms = 700) {
+  if (calmo() || !(ate > de)) { el.textContent = ate.toLocaleString('pt-BR'); return; }
+  el.textContent = de.toLocaleString('pt-BR');
+  // setTimeout e não requestAnimationFrame: com a janela escondida este para, e o número ficaria no começo
+  const t0 = performance.now();
+  const passo = () => { const k = Math.min(1, (performance.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(de + (ate - de) * e).toLocaleString('pt-BR'); if (k < 1) setTimeout(passo, 16); };
+  setTimeout(passo, 16);
+}
+
 function fmtShort(sec) {
   if (!sec || sec < 60) return null;
   const h = sec / 3600;
@@ -955,7 +1132,7 @@ function lojaTxt(g) {
 const sepTxt = partes => partes.filter(Boolean).join('<span class="sep">·</span>');
 function cardHTML(g) {
   if (S.estante === 'leitura') return cardSerie(g);
-  const sub = g.running ? '<span class="vivo">Jogando agora</span>' : sepTxt([lojaTxt(g), fmtShort(g.playtime) || (g.year ? g.year : 'Nunca jogado')]);
+  const sub = g.running ? `<span class="vivo"><i class="ponto-vivo"></i>Jogando agora${g.running_desde ? ' · ' + relogioHTML(g.running_desde) : ''}</span>` : sepTxt([lojaTxt(g), fmtShort(g.playtime) || (g.year ? g.year : 'Nunca jogado')]);
   const lojas = (g.lojas || []).filter(Boolean).map(x => lojaDe(x).n).join(', ');
   return `<div class="card${S.picked.has(g.id) ? ' picked' : ''}" tabindex="0" data-id="${g.id}">
     <div class="cover">${coverHTML(g)}
@@ -979,7 +1156,8 @@ function destaqueHTML(itens, leit) {
     acao = p.existe === false ? '<span class="d-emdia">Em dia com a série</span>'
       : `<button class="btn primary" data-ler="${d.id}">${ic('ler')}${p.continuar ? 'Continuar' : 'Ler'} capítulo ${esc(capTxt(p.num))}</button>`;
   } else {
-    info = [fmtShort(d.playtime), d.last_played ? 'jogado ' + fmtWhen(d.last_played).toLowerCase() : '', (d.lojas || []).filter(Boolean).map(x => lojaDe(x).n)[0]];
+    info = [d.running ? '' : fmtShort(d.playtime), d.running ? '' : (d.last_played ? 'jogado ' + fmtWhen(d.last_played).toLowerCase() : ''), (d.lojas || []).filter(Boolean).map(x => lojaDe(x).n)[0]];
+    if (d.running && d.running_desde) num = `<div class="d-num">${relogioHTML(d.running_desde)}<small>nesta sessão</small></div>`;
     acao = `<button class="btn primary" data-play="${d.id}" ${d.running ? 'disabled' : ''}>${ic('play')}${d.running ? 'Jogando agora' : 'Jogar'}</button>`;
   }
   const linha = x => {
@@ -992,7 +1170,7 @@ function destaqueHTML(itens, leit) {
     <div class="d-palco"><div class="d-fundo" style="${fundo}"></div>
       <button class="d-capa" data-abrir="${d.id}" aria-label="Detalhes de ${esc(d.name)}"><div class="cover${leit ? '' : ''}">${coverHTML(d)}</div></button>
       <div class="d-texto">
-        <div class="d-kick">${leit ? 'Continue lendo' : 'Continue jogando'}</div>
+        <div class="d-kick">${leit ? 'Continue lendo' : d.running ? '<i class="ponto-vivo"></i>Jogando agora' : 'Continue jogando'}</div>
         <button class="d-tit" data-abrir="${d.id}">${esc(d.name)}</button>
         ${num}
         <div class="d-info">${info.filter(Boolean).map(x => `<span>${esc(x)}</span>`).join('')}</div>
@@ -1017,7 +1195,7 @@ function render() {
   renderNav();
   document.body.classList.toggle('selecting', S.selecting);
   const list = visible();
-  let html = '';
+  let html = '', destaque = null;
   if (!S.games.length) {
     html = `<div class="blank"><div class="kick">Jogos</div><h2>Sua estante está vazia</h2>
       Os jogos instalados pela Steam, Epic, GOG, EA app, Ubisoft Connect, Battle.net e Xbox entram sozinhos. Para os outros, escaneie a pasta onde eles ficam ou adicione um por um escolhendo o executável.
@@ -1035,13 +1213,14 @@ function render() {
     }
     if (S.view.type === 'all' && !S.q && !S.selecting) {
       const recent = S.games.filter(g => !g.hidden && g.last_played).sort((a, b) => b.last_played - a.last_played).slice(0, 8);
-      if (recent.length) html += destaqueHTML(recent, false) + `<div class="row-title">Biblioteca</div>`;
+      if (recent.length) { recent.sort((a, b) => b.running - a.running); html += destaqueHTML(recent, false) + `<div class="row-title">Biblioteca</div>`; destaque = recent[0]; }
     }
     html += list.length ? `<div class="grid">${list.map(cardHTML).join('')}</div>`
       : S.view.type === 'updates' && !S.q ? `<div class="blank curto"><h2>Tudo em dia</h2>Nenhum jogo com versão nova.<br><span class="hint">A verificação usa a página salva de cada jogo (como o tópico do F95zone).</span></div>`
       : `<div class="blank curto"><h2>Nada por aqui</h2>${S.q ? 'Nenhum jogo com “' + esc(S.q.trim()) + '”. Confira a grafia ou procure por loja, gênero ou coleção.' : 'Esta parte da estante ainda está vazia.'}</div>`;
   }
-  $('content').innerHTML = html;
+  desenharConteudo(html, chaveTela());
+  brilhoDoDestaque(destaque);
   updateBulk();
 }
 
@@ -1056,7 +1235,8 @@ async function renderStats() {
   let r; try { r = await api('/api/estatisticas?em=' + em); } catch (e) { if (!STATS[em]) $('content').innerHTML = `<div class="blank">${esc(e.message)}</div>`; return; }
   const mudou = JSON.stringify(r) !== JSON.stringify(STATS[em]);
   STATS[em] = r;
-  if (mudou && S.view.type === 'stats' && S.estante === em) desenharStats(em, r);
+  // chegou dado novo: espera a animação de entrada acabar antes de desenhar de novo
+  if (mudou) setTimeout(() => { if (S.view.type === 'stats' && S.estante === em) desenharStats(em, STATS[em]); }, Math.max(0, (S.statsEm || 0) + 1600 - Date.now()));
 }
 function barrasHTML(semanas, fmt) {
   const max = Math.max(1, ...semanas.map(x => x.valor));
@@ -1075,7 +1255,8 @@ function desenharStats(em, r) {
   const caps = n => n + (n === 1 ? ' capítulo' : ' capítulos');
   const stat = (v, t) => `<div class="stat"><b>${esc(String(v))}</b><small>${esc(t)}</small></div>`;
   const desde = r.desde ? new Date(r.desde * 1000).toLocaleDateString('pt-BR', {day: 'numeric', month: 'long', year: 'numeric'}) : '';
-  let html = `<div class="head"><h1>Estatísticas</h1><span>${em === 'leitura' ? 'da sua Leitura' : 'dos seus jogos'}</span></div><div class="est">`;
+  let html = `<div class="head"><h1>Estatísticas</h1><span>${em === 'leitura' ? 'da sua Leitura' : 'dos seus jogos'}</span>
+    ${em === 'leitura' ? `<button class="btn" style="margin-left:auto" onclick="abrirRetro('mes')">Retrospectiva</button>` : ''}</div><div class="est">`;
   if (em === 'leitura') {
     html += `<div class="stats">${stat(r.semana, 'Capítulos nos últimos 7 dias')}${stat(r.mes, 'Nos últimos 30 dias')}${stat(r.capitulos.toLocaleString('pt-BR'), 'Capítulos lidos ao todo')}
       ${stat(r.comecadas + ' de ' + r.series, 'Séries começadas')}</div>
@@ -1093,7 +1274,18 @@ function desenharStats(em, r) {
       ${Object.keys(r.situacoes).length ? `<h3>Sua situação</h3><div class="chips">${SITUACOES.filter(([k]) => r.situacoes[k]).map(([k, n]) =>
         `<button class="chip" onclick="go('situacao', '${k}')">${n} <b>${r.situacoes[k]}</b></button>`).join('')}</div>` : ''}`;
   }
-  $('content').innerHTML = html + `</div>`;
+  const c = $('content'), tela = 'stats|' + em, entrando = c.dataset.tela !== tela;
+  c.innerHTML = html + `</div>`;
+  c.dataset.tela = tela;
+  if (!entrando || calmo()) return;
+  S.statsEm = Date.now();
+  c.querySelector('.est').classList.add('anima');
+  c.querySelectorAll('.barra i').forEach((el, i) => el.style.setProperty('--i', i));   // uma barra depois da outra
+  c.querySelectorAll('.topo .tr i').forEach((el, i) => el.style.setProperty('--i', i));
+  for (const b of c.querySelectorAll('.est .stat b')) {
+    const t = b.textContent.trim();
+    if (/^\d{1,3}(\.\d{3})*$/.test(t)) contarAte(b, parseInt(t.replace(/\./g, ''), 10));   // só número puro, como 1.234
+  }
 }
 
 function go(type, tag) { S.view = {type, tag}; S.picked.clear(); render(); $('content').scrollTop = 0; }
@@ -2256,6 +2448,192 @@ async function loadLeitura() {
   } catch (e) { console.error(e); }
 }
 
+// ---------- indicações da Leitura (o servidor escolhe em indicacoes.py; aqui só desenha) ----------
+const IND = {climas: null, em: 0, clima: store.get('clima', ''), item: {}, pular: {}, semana: null, carregando: false, retro: null};
+const capaInd = u => u ? `<img class="main" src="${esc(u.startsWith('/') ? capaMini(u) : u)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '';
+const tempoLeitura = s => { const m = (s.nao_lidos || 0) * (/manhwa|manhua/i.test(s.tipo || '') ? 4 : 6);
+  return 'uns ' + (m < 60 ? m + ' min' : String(Math.round(m / 6) / 10).replace('.', ',') + ' h'); };   // aproximado
+function esquecidas() {
+  const lim = Date.now() / 1000 - 60 * 86400;
+  return S.games.filter(s => !s.hidden && s.lista_anilist === 'Lendo' && s.ultima_leitura && s.ultima_leitura < lim && (s.nao_lidos || 0) > 0
+    && (s.proximo_cap || {}).existe !== false).sort((a, b) => b.nao_lidos - a.nao_lidos).slice(0, 12);
+}
+function maratonas(fora) {
+  return S.games.filter(s => !s.hidden && s.lista_anilist === 'Lendo' && (s.nao_lidos || 0) >= 15 && !fora.has(s.id)
+    && (s.proximo_cap || {}).existe !== false).sort((a, b) => b.nao_lidos - a.nao_lidos).slice(0, 12);
+}
+const miniFila = (s, sub, pausar) => `<div class="fi"><button class="fi-capa cover" data-abrir="${s.id}" aria-label="Detalhes de ${esc(s.name)}">${coverHTML(s)}</button>
+  <b title="${esc(s.name)}">${esc(s.name)}</b><small>${esc(sub)}</small>
+  <div class="fi-acts"><button class="btn sm" data-ler="${s.id}">Continuar</button>${pausar ? `<button class="btn sm ghost" onclick="pausarSerie(${jsArg(s.id)})">Pausar</button>` : ''}</div></div>`;
+function indHTML(it, comOutra) {
+  const acoes = it.de_fora
+    ? `<button class="btn primary sm" onclick="porEmQueroLer(${jsArg({anilist_id: it.anilist_id, mu_id: it.mu_id, nome: it.nome})})">Pôr em Quero ler</button>`
+    : `<button class="btn primary sm" data-ler="${it.id}">${it.lido ? 'Continuar' : 'Começar'}</button><button class="btn sm ghost" data-abrir="${it.id}">Detalhes</button>`;
+  const info = [it.nota ? 'Nota ' + it.nota : '', it.tipo, (it.genres || []).slice(0, 3).join(', ')].filter(Boolean);
+  return `<div class="ind"><div class="cover">${capaInd(it.capa) || `<div class="ph" style="background:hsl(${hue(it.nome)} 40% 26%)">${esc(it.nome)}</div>`}</div>
+    <div class="ind-t"><b>${esc(it.nome)}</b><small>${esc(it.motivo)}</small>
+      <div class="ind-info">${info.map(x => `<span>${esc(x)}</span>`).join('')}</div>
+      <div class="acts">${acoes}${comOutra ? `<button class="btn sm ghost" onclick="outraIndicacao()">Outra</button>` : ''}</div></div></div>`;
+}
+function paraVoceHTML() {
+  if (!IND.climas || Date.now() - IND.em > 10 * 60000) carregarIndicacoes();
+  const cl = (IND.climas || []).filter(c => c.total), atual = cl.some(c => c.chave === IND.clima) ? IND.clima : '';
+  const it = atual ? IND.item[atual] : null, esq = esquecidas(), mar = maratonas(new Set(esq.map(s => s.id)));
+  let h = `<section class="paravc" id="paraVoce">`;
+  if (IND.retro && IND.retro.capitulos && !IND.retro.vista && new Date().getDate() <= 10)
+    h += `<div class="aviso"><div>A retrospectiva de ${esc(IND.retro.nome)} está pronta: ${IND.retro.capitulos} ${IND.retro.capitulos === 1 ? 'capítulo' : 'capítulos'} em ${IND.retro.dias} ${IND.retro.dias === 1 ? 'dia' : 'dias'}.</div>
+      <div class="acts"><button class="btn primary" onclick="abrirRetro('mes', ${jsArg(IND.retro.ref)})">Ver</button><button class="btn ghost" onclick="retroVista(${jsArg(IND.retro.ref)})">Depois</button></div></div>`;
+  if (cl.length || (IND.semana && IND.semana.item)) {
+    h += `<div class="row-title">Para você</div><div class="pv"><div class="pv-clima"><div class="pv-kick">No clima de quê?</div>
+      <div class="chips">${cl.map(c => `<button class="chip clima${c.chave === atual ? ' on' : ''}" onclick="escolherClima('${c.chave}')">${esc(c.nome)}</button>`).join('')}</div>
+      ${!atual ? '<p class="hint" style="margin:0">Escolha um clima: a Estante indica uma série da sua lista, ou parecida com o que você leu.</p>'
+        : it ? indHTML(it, true) : it === null ? '<p class="hint" style="margin:0">Nada neste clima por enquanto.</p>' : '<div class="spin"></div>'}</div>
+      ${IND.semana && IND.semana.item ? `<div class="pv-semana"><div class="pv-kick">Escolha da semana</div>${indHTML(IND.semana.item, false)}</div>` : ''}</div>`;
+  }
+  if (mar.length) h += `<div class="row-title">Para maratonar</div><div class="fila">${mar.map(s => miniFila(s, `${s.nao_lidos} capítulos · ${tempoLeitura(s)}`)).join('')}</div>`;
+  if (esq.length) h += `<div class="row-title">Esquecidas</div><div class="fila">${esq.map(s => miniFila(s, `${s.nao_lidos} ${s.nao_lidos === 1 ? 'capítulo novo' : 'capítulos novos'} · lida ${fmtWhen(s.ultima_leitura).toLowerCase()}`, true)).join('')}</div>`;
+  return h + '</section>';
+}
+function redesenharParaVoce() { const el = $('paraVoce'); if (el && S.estante === 'leitura') el.outerHTML = paraVoceHTML(); }
+async function carregarIndicacoes() {
+  if (IND.carregando) return;
+  IND.carregando = true; IND.em = Date.now();
+  const d = new Date(), ant = new Date(d.getFullYear(), d.getMonth() - 1, 1), ref = ant.getFullYear() + '-' + String(ant.getMonth() + 1).padStart(2, '0');
+  try {
+    [IND.climas, IND.semana, IND.retro] = await Promise.all([api('/api/leitura/climas'), api('/api/leitura/semana'),
+      api('/api/leitura/retrospectiva?periodo=mes&ref=' + ref).catch(() => null)]);
+    if (IND.clima && IND.item[IND.clima] === undefined) await pedirIndicacao(false);
+  } catch (e) { IND.climas = IND.climas || []; }
+  IND.carregando = false;
+  redesenharParaVoce();
+}
+async function pedirIndicacao(redesenhar = true) {
+  const c = IND.clima;
+  try { IND.item[c] = (await api('/api/leitura/indicacao?clima=' + c + '&pular=' + encodeURIComponent((IND.pular[c] || []).join(',')))).item; }
+  catch (e) { IND.item[c] = null; }
+  if (redesenhar) redesenharParaVoce();
+}
+function escolherClima(c) {
+  IND.clima = IND.clima === c ? '' : c; store.set('clima', IND.clima);
+  redesenharParaVoce();
+  if (IND.clima && IND.item[c] === undefined) pedirIndicacao();
+}
+function outraIndicacao() {
+  const c = IND.clima, it = IND.item[c];
+  if (it) (IND.pular[c] = IND.pular[c] || []).push(it.chave);
+  IND.item[c] = undefined; redesenharParaVoce(); pedirIndicacao();
+}
+async function porEmQueroLer(d) {
+  try {
+    const r = await api('/api/leitura/indicacao/adicionar', {method: 'POST', body: d});
+    toast(r.nova ? '“' + d.nome + '” entrou na sua lista Quero ler. A capa e os dados chegam em instantes.' : '“' + d.nome + '” já estava na sua Leitura.');
+    IND.climas = null; IND.item = {}; L.parecidas = {}; S.lastJson = ''; load();
+  } catch (e) { toast(e.message, true); }
+}
+async function pausarSerie(id) {
+  try { await patch(id, {lista_anilist: 'Pausado'}); toast('“' + byId(id).name + '” foi para as pausadas.'); S.lastJson = ''; load(); }
+  catch (e) { toast(e.message, true); }
+}
+// parecidas, no painel da série
+L.parecidas = {};
+function parecidasHTML(s) {
+  const r = L.parecidas[s.id];
+  if (r === undefined) {
+    L.parecidas[s.id] = null;
+    api('/api/leitura/parecidas?id=' + encodeURIComponent(s.id)).then(x => {
+      L.parecidas[s.id] = x;
+      if (S.open === s.id && $('parecidasSec')) $('parecidasSec').outerHTML = parecidasHTML(s);
+    }, () => { L.parecidas[s.id] = []; });
+  }
+  if (!r || !r.length) return '<div id="parecidasSec"></div>';
+  return `<div class="sec" id="parecidasSec"><h3>Parecidas</h3><div class="fila">${r.map(x => `<div class="fi">
+    <button class="fi-capa cover" ${x.id ? `onclick="openDrawer(${jsArg(x.id)})"` : 'tabindex="-1"'} aria-label="${esc(x.nome)}">${capaInd(x.capa)}</button>
+    <b title="${esc(x.nome)}">${esc(x.nome)}</b><small>${x.id ? esc(x.lista || 'Na sua Leitura') : x.nota ? 'Nota ' + x.nota : '&nbsp;'}</small>
+    ${x.id ? '' : `<div class="fi-acts"><button class="btn sm" onclick="porEmQueroLer(${jsArg({anilist_id: x.anilist_id, mu_id: x.mu_id, nome: x.nome})})">Quero ler</button></div>`}
+  </div>`).join('')}</div></div>`;
+}
+// terminou uma série (marcou como Terminado, ou chegou ao fim de uma que acabou de vez): aviso com a próxima parecida
+const terminou = s => s.lista_anilist === 'Terminado' || (s.status === 'Completa' && s.traducao_completa === true && s.ultimo_lido && (s.proximo_cap || {}).existe === false);
+function verTerminadas() {
+  const antes = L.terminadas, agora = new Map(S.games.map(s => [s.id, terminou(s)]));
+  L.terminadas = agora;
+  if (!antes) return;
+  for (const [id, fim] of agora) if (fim && antes.get(id) === false) avisoProxima(byId(id));
+}
+async function avisoProxima(s) {
+  let r; try { r = await api('/api/leitura/parecidas?id=' + encodeURIComponent(s.id)); } catch (e) { return; }
+  const x = r.find(p => !p.id) || r.find(p => p.lista === 'Quero ler');
+  if (!x) return;
+  const t = document.createElement('div');
+  t.className = 'toast prox';
+  t.innerHTML = `<div class="cover">${capaInd(x.capa)}</div><div><b>Terminou ${esc(s.name)}? A próxima pode ser</b><span>${esc(x.nome)}</span>
+    <div class="acts">${x.id ? `<button class="btn primary sm" onclick="openDrawer(${jsArg(x.id)})">Ver</button>`
+      : `<button class="btn primary sm" onclick="porEmQueroLer(${jsArg({anilist_id: x.anilist_id, mu_id: x.mu_id, nome: x.nome})})">Pôr em Quero ler</button>`}
+    <button class="btn sm ghost" onclick="this.closest('.toast').remove()">Agora não</button></div></div>`;
+  $('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 20000);
+}
+// retrospectiva: o mês ou o ano na Leitura, em cartões que passam um por um
+const RETRO = {r: null, i: 0, slides: []};
+const GEN_PT = {Action: 'Ação', Adventure: 'Aventura', Comedy: 'Comédia', Drama: 'Drama', Fantasy: 'Fantasia', Horror: 'Terror', Mystery: 'Mistério',
+  Psychological: 'Psicológico', Romance: 'Romance', 'Slice of Life': 'Slice of life', Supernatural: 'Sobrenatural', 'Martial Arts': 'Artes marciais',
+  Historical: 'Histórico', 'School Life': 'Vida escolar', 'Sci-fi': 'Ficção científica', Sports: 'Esporte', Tragedy: 'Tragédia', Thriller: 'Suspense'};
+const dataLonga = (t, o) => new Date(t).toLocaleDateString('pt-BR', o || {day: 'numeric', month: 'long'});
+function slidesRetro(r) {
+  const caps = n => n + (n === 1 ? ' capítulo' : ' capítulos');
+  if (!r.capitulos) return [`<div class="r-kick">${esc(r.nome)}</div><div class="r-nome">Nenhum capítulo aberto neste período</div>
+    <p>A retrospectiva conta cada capítulo aberto nos sites com a extensão${r.desde ? ', desde ' + esc(dataLonga(r.desde * 1000)) : ''}.</p>`];
+  const sl = [`<div class="r-kick">Sua Leitura em ${esc(r.nome)}</div><div class="r-big" data-contar="${r.capitulos}">0</div>
+    <p>capítulos abertos, em ${r.dias} ${r.dias === 1 ? 'dia' : 'dias'}, de ${r.series} ${r.series === 1 ? 'série' : 'séries'}.</p>
+    ${r.pouco ? `<p class="hint">Ainda tem pouco histórico: a Estante guarda cada capítulo aberto desde ${esc(dataLonga(r.desde * 1000))}.</p>` : ''}`];
+  const top = r.mais_lidas[0];
+  if (top) sl.push(`<div class="r-kick">A que você mais leu</div><div class="cover">${capaInd(top.capa)}</div><div class="r-nome">${esc(top.nome)}</div><p>${caps(top.capitulos)}</p>`);
+  if (r.generos.length) sl.push(`<div class="r-kick">O gênero do período</div><div class="r-nome" style="font-size:44px">${esc(GEN_PT[r.generos[0]] || r.generos[0])}</div>
+    ${r.generos.length > 1 ? `<p>Depois vieram ${esc(r.generos.slice(1).map(g => (GEN_PT[g] || g).toLowerCase()).join(' e '))}.</p>` : ''}`);
+  if (r.dia_top && r.dia_top.capitulos > 1) sl.push(`<div class="r-kick">O dia em que você mais leu</div>
+    <div class="r-nome">${esc(dataLonga(r.dia_top.data + 'T12:00', {weekday: 'long', day: 'numeric', month: 'long'}))}</div>
+    <div class="r-big" data-contar="${r.dia_top.capitulos}">0</div><p>capítulos num dia só.</p>`);
+  if (r.comecadas.length) sl.push(`<div class="r-kick">Você começou ${r.comecadas.length} ${r.comecadas.length === 1 ? 'série' : 'séries'}</div>
+    <div class="r-capas">${r.comecadas.slice(0, 8).map(s => `<div class="cover" title="${esc(s.nome)}">${capaInd(s.capa)}</div>`).join('')}</div>`);
+  if (r.mais_lidas.length > 1) sl.push(`<div class="r-kick">As mais lidas</div><ol class="r-lista">${r.mais_lidas.map(s =>
+    `<li><span>${esc(s.nome)}</span><small>${caps(s.capitulos)}</small></li>`).join('')}</ol>`);
+  return sl;
+}
+async function abrirRetro(periodo = 'mes', ref = '') {
+  let r; try { r = await api('/api/leitura/retrospectiva?periodo=' + periodo + '&ref=' + encodeURIComponent(ref)); } catch (e) { toast(e.message, true); return; }
+  Object.assign(RETRO, {r, i: 0, slides: slidesRetro(r)});
+  const opcoes = [...r.meses].reverse().map(m => `<option value="mes|${m}" ${r.periodo === 'mes' && r.ref === m ? 'selected' : ''}>${esc(dataLonga(m + '-15T12:00', {month: 'long', year: 'numeric'}))}</option>`)
+    .concat([...new Set(r.meses.map(m => m.slice(0, 4)))].reverse().map(a => `<option value="ano|${a}" ${r.periodo === 'ano' && r.ref === a ? 'selected' : ''}>O ano de ${a}</option>`));
+  openModal(head('Retrospectiva') + `<div class="retro">
+    ${opcoes.length > 1 ? `<div class="retro-top"><select class="inp" style="width:auto" onchange="abrirRetro(...this.value.split('|'))">${opcoes.join('')}</select></div>` : ''}
+    <div class="retro-slide" id="retroSlide"></div><div class="r-pontos" id="retroPontos"></div></div>
+    <footer><button class="btn" id="retroAnt" onclick="passarRetro(-1)">Anterior</button><button class="btn primary" id="retroProx" onclick="passarRetro(1)">Próximo</button></footer>`, true);
+  desenharRetro();
+  if (r.capitulos) retroVista(r.ref, true);
+}
+function desenharRetro() {
+  const el = $('retroSlide'); if (!el) return;
+  el.innerHTML = RETRO.slides[RETRO.i];
+  el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  el.querySelectorAll('[data-contar]').forEach(b => contarAte(b, +b.dataset.contar, 0, 900));
+  $('retroPontos').innerHTML = RETRO.slides.length > 1 ? RETRO.slides.map((_, i) => `<i class="${i === RETRO.i ? 'on' : ''}"></i>`).join('') : '';
+  $('retroAnt').disabled = RETRO.i === 0;
+  $('retroProx').textContent = RETRO.i === RETRO.slides.length - 1 ? 'Fechar' : 'Próximo';
+}
+function passarRetro(n) {
+  if (RETRO.i + n >= RETRO.slides.length) { closeModal(); return; }
+  RETRO.i = Math.max(0, RETRO.i + n); desenharRetro();
+}
+document.addEventListener('keydown', e => {
+  if (!$('retroSlide') || !$('modalWrap').classList.contains('show')) return;
+  if (e.key === 'ArrowRight') passarRetro(1); else if (e.key === 'ArrowLeft') passarRetro(-1);
+});
+async function retroVista(ref, quieto) {
+  try { await api('/api/leitura/retrospectiva/vista', {method: 'POST', body: {ref}}); } catch (e) {}
+  if (IND.retro && IND.retro.ref === ref) IND.retro.vista = true;
+  if (!quieto) redesenharParaVoce();
+}
+
 const corSite = k => k ? `hsl(${hue(k)} 55% 58%)` : 'var(--dim)';
 const dotSite = k => `<span class="dot" style="background:${corSite(k)}"></span>`;
 const capTxt = n => String(n).replace('.', ',');
@@ -2364,7 +2742,7 @@ function cardSerie(s, comBotao) {
   const quem = [s.tipo, s.site_nome || s.site_principal].filter(Boolean).join(' · ');
   return `<div class="card leit${S.picked.has(s.id) ? ' picked' : ''}" tabindex="0" data-id="${s.id}">
     <div class="cover">${coverHTML(s)}
-      ${s.tem_novo ? `<div class="badge cnovo" title="Capítulos que saíram depois do último que você leu">${s.nao_lidos} ${s.nao_lidos === 1 ? 'novo' : 'novos'}</div>` : ''}
+      ${s.tem_novo ? `<div class="badge cnovo" title="Capítulos que saíram depois do último que você leu"><span class="n">${s.nao_lidos}</span> ${s.nao_lidos === 1 ? 'novo' : 'novos'}</div>` : ''}
       ${s.favorite && !S.selecting ? `<div class="fav" title="Favorita">${ic('estrela', 'cheio')}</div>` : ''}
       <div class="check"></div>
       <div class="play"><span data-ler="${s.id}" title="${p.existe === false ? 'Você está em dia' : 'Ler capítulo ' + esc(capTxt(p.num))}">${ic('ler')}${p.existe === false ? 'Em dia' : 'Ler ' + esc(capTxt(p.num))}</span></div>
@@ -2401,7 +2779,7 @@ function renderLeitura() {
   renderNav();
   document.body.classList.toggle('selecting', S.selecting);
   const v = S.view;
-  let html = '';
+  let html = '', destaque = null;
   if (!S.games.length) {
     html = `<div class="blank"><div class="kick">Leitura</div><h2>Sua Leitura está vazia</h2>
       A Estante guarda onde você parou em cada mangá, manhwa ou HQ que você lê nos sites, e avisa quando sai capítulo novo. A leitura continua nos sites.
@@ -2444,14 +2822,33 @@ function renderLeitura() {
     if (v.type === 'all' && !S.q && !S.selecting && L.extensaoVelha) html += avisoExtensaoVelha();
     if (v.type === 'all' && !S.q && !S.selecting && !filtrosAtivos()) {
       const cont = S.games.filter(s => !s.hidden && s.ultima_leitura).sort((a, b) => b.ultima_leitura - a.ultima_leitura).slice(0, 8);
-      if (cont.length) html += destaqueHTML(cont, true) + `<div class="row-title">Biblioteca</div>`;
+      if (cont.length) { html += destaqueHTML(cont, true); destaque = cont[0]; }
+      html += paraVoceHTML() + `<div class="row-title">Biblioteca</div>`;
     }
     html += list.length ? `<div class="grid">${list.map(s => cardSerie(s)).join('')}</div>`
       : v.type === 'novos' && !S.q ? `<div class="blank curto"><h2>Tudo em dia</h2>Nenhuma série com capítulo novo.</div>`
       : `<div class="blank curto"><h2>Nada por aqui</h2>${S.q ? 'Nenhuma série com “' + esc(S.q.trim()) + '”. A busca também olha os nomes alternativos, o autor e os gêneros.' : filtrosAtivos() ? 'Nenhuma série passa pelos filtros marcados.' : 'Esta parte da estante ainda está vazia.'}</div>`;
   }
-  $('content').innerHTML = html;
+  desenharConteudo(html, chaveTela());
+  brilhoDoDestaque(destaque);
+  mostrarChegadas();
+  verTerminadas();
   updateBulk();
+}
+// capítulo novo que chegou enquanto a Leitura estava aberta: o cartão pulsa e o número sobe contando
+function mostrarChegadas() {
+  const antes = L.naoLidos, agora = new Map(S.games.map(s => [s.id, s.nao_lidos || 0]));
+  L.naoLidos = agora;
+  if (!antes) return;   // a primeira vez que a Leitura aparece não é chegada
+  for (const [id, n] of agora) {
+    const de = antes.get(id);
+    if (de === undefined || n <= de) continue;
+    const card = $('content').querySelector(`.grid>.card[data-id="${CSS.escape(id)}"]`);
+    if (!card) continue;
+    card.classList.add('chegou');
+    const b = card.querySelector('.badge.cnovo');
+    if (b && b.querySelector('.n')) contarAte(b.querySelector('.n'), n, de, 900);
+  }
 }
 
 // os capítulos abrem na janela de leitura da Estante (uma janela só do site, sem barra de endereço)
@@ -2604,6 +3001,7 @@ function renderSerie() {
     ${sobreDe(s) ? `<div class="sec"><h3>Sobre</h3><div class="desc">${esc(sobreDe(s))}</div></div>` : ''}
     ${(s.genres || []).length ? `<div class="sec"><h3>Gêneros</h3><div class="genres">${s.genres.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>` : ''}
     <div class="sec"><h3>Capítulos</h3>${capitulosHTML(s)}</div>
+    ${parecidasHTML(s)}
     ${s.local ? `<div class="sec"><h3>No seu PC</h3><div class="path">${esc(s.local.pasta)}</div><p class="hint">${s.local.caps.length} ${s.local.caps.length === 1 ? 'capítulo' : 'capítulos'} nessa pasta.</p></div>` : `<div class="sec"><h3>Onde você lê</h3>
       ${(s.sites_info || []).length ? `<div class="fontes" style="margin-bottom:10px">${s.sites_info.map(x => `
         <div class="fonte"><div class="q"><b>${dotSite(x.site)}${esc(x.nome)}${x.principal ? ' <span class="principal">principal</span>' : ''}</b>
@@ -3358,7 +3756,7 @@ function desenharFaixa() {
   $('tocando').dataset.k = k;
   $('tocando').innerHTML = `<div class="tprog"><i id="tProg"></i></div>
     <div class="tcapa">${capaTocando(f)}</div>
-    <button class="tq" onclick="abrirLetra()" title="Ver a letra"><b>${esc(f.titulo)}</b><small>${esc(deOnde(f))}</small></button>
+    <button class="tq" onclick="abrirLetra()" title="Ver a letra"><b><span class="ondas${f.tocando ? ' on' : ''}" aria-hidden="true"><i></i><i></i><i></i></span>${esc(f.titulo)}</b><small>${esc(deOnde(f))}</small></button>
     <div class="tbots">${botoesTocando(false)}</div>
     ${fontesTocandoHTML(f)}
     <button class="btn sm" onclick="abrirLetra()">Letra</button>`;

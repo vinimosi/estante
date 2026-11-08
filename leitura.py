@@ -452,7 +452,27 @@ def dados_mu(info):
         "status": status, "tipo": TIPO_MU.get((info.get("type") or "").lower(), info.get("type") or ""),
         "year": int(ano) if ano.isdigit() else None, "autor": htmlmod.unescape(autor or ""),
         "latest": num(info.get("latest_chapter")), "url_mu": info.get("url") or "",
+        # o status fala da obra original; "completed" é o MangaUpdates dizendo que a tradução também acabou
+        "traducao_completa": bool(info.get("completed")),
+        # para as indicações: nota da comunidade, parecidas e os temas mais votados pelos leitores
+        "nota_mu": info.get("bayesian_rating") or None, "votos_mu": info.get("rating_votes") or 0,
+        "recs_mu": _recs_mu(info), "temas": [c.get("category") for c in sorted(
+            (c for c in info.get("categories") or [] if isinstance(c, dict) and c.get("category") and (c.get("votes") or 0) > 0),
+            key=lambda c: -(c.get("votes") or 0))][:15],
     }
+
+
+def _recs_mu(info):
+    """As parecidas do MangaUpdates (as dos leitores e as por tema), sem repetir, as mais votadas primeiro."""
+    vistos, out = set(), []
+    for r in sorted(list(info.get("recommendations") or []) + list(info.get("category_recommendations") or []),
+                    key=lambda r: -(r.get("weight") or 0) if isinstance(r, dict) else 0):
+        if not isinstance(r, dict) or not r.get("series_id") or r["series_id"] in vistos or r["series_id"] == info.get("series_id"):
+            continue
+        vistos.add(r["series_id"])
+        img = ((r.get("series_image") or {}).get("url") or {})
+        out.append({"mu_id": r["series_id"], "nome": htmlmod.unescape(r.get("series_name") or ""), "capa": img.get("original") or img.get("thumb") or ""})
+    return out[:8]
 
 
 # ---------------------------------------------------------------- capas
@@ -585,6 +605,11 @@ def aplicar_mu(sid, m, trocar_nome=False, refazer=False):
         if m.get("description"):
             s["dados_de"], s["desc_limpa"] = "mangaupdates", True
         s["url_mu"] = m.get("url_mu") or s.get("url_mu") or ""
+        if "traducao_completa" in m:
+            s["traducao_completa"] = m["traducao_completa"]
+        for k in ("nota_mu", "votos_mu", "recs_mu", "temas"):
+            if k in m:
+                s[k] = m[k]
         if m.get("latest") and s.get("origem") != "local":  # nos quadrinhos do PC, só contam os arquivos que você tem
             _subiu(d, s, m["latest"], avisar=ja_vista, site="")
         nova = refazer and (not s.get("cover") or s.get("capa_mu_url") != m.get("capa_url"))
@@ -642,14 +667,15 @@ def verificar(sid, trocar_nome=False):
         return None
     mid = s.get("mu_id")
     try:
-        if not mid and not s.get("mu_tentado"):
+        if not mid and (not s.get("mu_tentado") or time.time() - (s.get("mu_tentado_em") or 0) > 7 * 86400):
             for nome in [s["name"]] + list(s.get("titulos_alt") or [])[:3]:
                 r = melhor(nome, mu_buscar(nome), lambda x: [x.get("title") or "", x.get("hit_title") or ""])
                 if r:
                     mid = r.get("series_id")
                     break
         if not mid:
-            _marcar(sid, mu_tentado=True, verificado_em=time.time() if s.get("verificado_em") else None)
+            # não achou: tenta de novo daqui a uma semana (a série pode ter entrado lá, ou mudado de nome)
+            _marcar(sid, mu_tentado=True, mu_tentado_em=time.time(), verificado_em=time.time() if s.get("verificado_em") else None)
             return None
         return aplicar_mu(sid, dados_mu(mu_serie(mid)), trocar_nome=trocar_nome)
     except Exception as e:
@@ -664,6 +690,8 @@ def _subiu(d, s, ultimo, avisar=True, site=""):
     if antes is not None and ultimo <= antes:
         return False
     s["ultimo_disponivel"] = ultimo
+    if avisar and antes is not None:
+        _guardar_lancamento(s, ultimo)
     if avisar and antes is not None and (s.get("ultimo_lido") is None or ultimo > s["ultimo_lido"]):
         s["novo_desde"] = time.time()
         d["novidades"].append({"s": s["id"], "c": ultimo, "t": time.time(), "site": site})
@@ -783,15 +811,86 @@ def verificar_lancamentos():
     return novos
 
 
-def verificar_todas(forcar=False):
+_tentativa = {}  # série -> quando a volta automática tentou por último (para não insistir numa que deu erro)
+
+# ---------------------------------------------------------------- ritmo de lançamento (como a atualização inteligente do Mihon)
+JUNTOS = 6 * 3600              # capítulos que saem com menos de 6 horas de diferença contam como um lançamento só
+RITMO_MIN, RITMO_MAX = 86400, 28 * 86400
+OLHAR_AO_MENOS = 7 * 86400     # mesmo fora do ritmo, cada série é olhada pelo menos uma vez por semana
+PARADA_OLHAR = 3 * 86400       # série atrasada há mais de 3 ritmos (pausa, hiato): uma olhada a cada 3 dias
+
+
+def _guardar_lancamento(s, n, t=None):
+    """Anota quando saiu um capítulo novo (os últimos 10 lançamentos), para aprender o ritmo da série."""
+    t = t or time.time()
+    h = s.setdefault("lancamentos", [])
+    if h and t - h[-1][1] < JUNTOS:
+        h[-1] = [max(h[-1][0], n), h[-1][1]]
+    else:
+        h.append([n, t])
+    del h[:-10]
+
+
+def _indice_novidades(d):
+    """{série: [quando saiu cada novidade]}, para as séries que ainda não têm lançamentos anotados."""
+    idx = {}
+    for n in d.get("novidades") or []:
+        if n.get("t"):
+            idx.setdefault(n.get("s"), []).append(n["t"])
+    return idx
+
+
+def _ritmo(s, extras=()):
+    """(intervalo típico entre lançamentos em segundos, quando foi o último). O intervalo é None enquanto a série
+    não tem pelo menos três lançamentos anotados: aí ela é olhada como sempre."""
+    eventos = []
+    for t in sorted([x[1] for x in s.get("lancamentos") or []] + list(extras)):
+        if not eventos or t - eventos[-1] >= JUNTOS:
+            eventos.append(t)
+    eventos = eventos[-9:]
+    if len(eventos) < 3:
+        return None, (eventos[-1] if eventos else None)
+    vaos = sorted(b - a for a, b in zip(eventos, eventos[1:]))
+    return min(max(vaos[len(vaos) // 2], RITMO_MIN), RITMO_MAX), eventos[-1]
+
+
+def _na_hora(s, idx=None, agora=None):
+    """Se já vale olhar a série: perto de quando o próximo capítulo costuma sair (a partir de 80% do intervalo),
+    ou atrasada. Série em pausa (passou de 3 intervalos sem nada) é olhada a cada 3 dias, e qualquer uma pelo
+    menos uma vez por semana. A lista de lançamentos recentes do MangaUpdates, que vem de hora em hora para
+    todas as séries de uma vez, continua pegando o que sair fora do ritmo."""
+    agora = agora or time.time()
+    ritmo, ultimo = _ritmo(s, (idx or {}).get(s["id"], ()))
+    visto = s.get("verificado_em") or 0
+    if not ritmo or agora - visto >= OLHAR_AO_MENOS:
+        return True
+    if agora > ultimo + 3 * ritmo:
+        return agora - visto >= PARADA_OLHAR
+    return agora >= ultimo + 0.8 * ritmo
+
+
+def _vencidas(d, horas):
+    """As séries ativas que não são olhadas há mais de tantas horas (ou nunca foram) e que estão na hora pelo
+    ritmo de lançamento delas, na ordem de prioridade. A volta automática só passa por elas: se a Estante fechar
+    no meio, a próxima continua de onde parou, em vez de começar de novo pelas primeiras e nunca chegar ao fim."""
+    agora = time.time()
+    limite, idx = agora - horas * 3600, _indice_novidades(d)
+    return [s for s in _series_ativas(d) if (s.get("verificado_em") or 0) < limite and _tentativa.get(s["id"], 0) < limite
+            and _na_hora(s, idx, agora)]
+
+
+def verificar_todas(forcar=False, horas=None):
+    """Série por série, as ativas (as que você está lendo primeiro). Com horas, só as que não são olhadas há esse tempo."""
     if _verificando["ativo"]:
         return dict(_verificando)
-    ids = [s["id"] for s in _series_ativas(_load())]  # as que você está lendo primeiro
+    d = _load()
+    ids = [s["id"] for s in (_vencidas(d, horas) if horas else _series_ativas(d))]
     _verificando.update(ativo=True, feitos=0, total=len(ids), ultima=time.time())
 
     def w():
         try:
             for sid in ids:
+                _tentativa[sid] = time.time()
                 try:
                     verificar(sid)
                 except Exception as e:
@@ -805,12 +904,14 @@ def verificar_todas(forcar=False):
 
 
 def vigiar(intervalo_horas=12):
-    """A cada hora, os lançamentos recentes do MangaUpdates de uma vez. Série por série, ao abrir (se fizer tempo)
-    e a cada 12 horas, para pegar o que escapou. Também olha as pastas de quadrinhos do PC."""
+    """A cada hora, os lançamentos recentes do MangaUpdates de uma vez. Série por série, as que não são olhadas
+    há 12 horas, continuando de onde a última volta parou, para pegar o que escapou. Também olha as pastas de quadrinhos do PC."""
+    import indicacoes
     import mangaupdates
     import quadrinhos
     quadrinhos.vigiar()
     mangaupdates.vigiar()
+    indicacoes.vigiar()
     def loop():
         time.sleep(20)
         while True:
@@ -823,10 +924,8 @@ def vigiar(intervalo_horas=12):
             except Exception as e:
                 print("[leitura] lançamentos do MangaUpdates:", e)
             try:
-                series = _load()["series"]
-                ultima = max([s.get("verificado_em") or 0 for s in series] or [0])
-                if series and time.time() - ultima > intervalo_horas * 3600:
-                    verificar_todas()
+                if _vencidas(_load(), intervalo_horas):
+                    verificar_todas(horas=intervalo_horas)
             except Exception as e:
                 print("[leitura]", e)
             time.sleep(600)
@@ -1167,6 +1266,8 @@ def _lista_pronta(lc):
         for s in d["series"]:
             o = serie_out(s)
             o.pop("description", None)  # a descrição só aparece no painel da série: vem por /api/leitura/sobre
+            for k in ("recs_mu", "temas", "al"):  # dados das indicações: ficam no servidor (/api/leitura/parecidas)
+                o.pop(k, None)
             series.append(o)
         c.update(chave=chave, quando=time.time(), series=json.dumps(series, ensure_ascii=False, separators=(",", ":")),
                  novidades=[n for n in reversed(d["novidades"]) if n["s"] in ids][:200],
@@ -2066,12 +2167,29 @@ def api_capa(sid):
 @bp.get("/api/leitura/para-verificar")
 def api_para_verificar():
     """Lista de páginas de série que a extensão olha de tempos em tempos (como o Mihon faz com as fontes),
-    para saber em que site cada capítulo novo sai primeiro."""
-    out = []
-    for s in _series_ativas(_load()):
+    para saber em que site cada capítulo novo sai primeiro. Só as que estão na hora pelo ritmo de lançamento."""
+    out, d = [], _load()
+    idx, agora = _indice_novidades(d), time.time()
+    for s in _series_ativas(d):
+        if not _na_hora(s, idx, agora):
+            continue
         for k, (slug, url) in _paginas_da_serie(s).items():
             out.append({"id": s["id"], "site": k, "slug": slug, "url": url})
     return jsonify(out[:900])
+
+
+def _acabou(s):
+    """Série que não vai ter capítulo novo. "Completa" quer dizer que a obra original acabou, mas a tradução pode
+    continuar saindo por meses: ela só sai das verificações quando o MangaUpdates diz que a tradução também acabou.
+    Sem essa informação (dados de antes desta versão, ou de fora do MangaUpdates), as que você está lendo continuam
+    sendo olhadas; na primeira olhada o MangaUpdates responde e ela fica certa."""
+    if s.get("status") == "Cancelada":
+        return True
+    if s.get("status") != "Completa":
+        return False
+    if "traducao_completa" in s:
+        return bool(s["traducao_completa"])
+    return s.get("lista_anilist") != "Lendo"
 
 
 def _series_ativas(d):
@@ -2082,7 +2200,7 @@ def _series_ativas(d):
     for n in d.get("novidades") or []:
         if (n.get("t") or 0) > limite:
             lancou[n["s"]] = lancou.get(n["s"], 0) + 1
-    ativas = [s for s in d["series"] if not s.get("hidden") and not s.get("local") and s.get("status") not in ("Completa", "Cancelada")
+    ativas = [s for s in d["series"] if not s.get("hidden") and not s.get("local") and not _acabou(s)
               and s.get("lista_anilist") not in ("Larguei", "Terminado")]
     return sorted(ativas, key=lambda s: (s.get("lista_anilist") != "Lendo", -lancou.get(s["id"], 0), -(s.get("ultima_leitura") or 0)))
 
@@ -2180,9 +2298,11 @@ def marcar_lido_no_leitor(d, s, n, fim, onde):
 def iniciar(app, ctx):
     CTX.update(ctx)
     import baixar
+    import indicacoes
     import mangaupdates
     import quadrinhos
     baixar.rotas(bp)
+    indicacoes.rotas(bp)
     quadrinhos.rotas(bp)
     mangaupdates.rotas(bp)
     app.register_blueprint(bp)
