@@ -1146,22 +1146,57 @@ def _anotar_extensao(versao, navegador=""):
         CTX["save_cfg"](cfg)
 
 
+_lista_cache = {"chave": None, "quando": 0.0, "series": "", "novidades": [], "historico": []}
+
+
+def _lista_pronta(lc):
+    """A lista de séries já montada, guardada na memória. A tela pergunta a cada poucos segundos, e montar tudo de
+    novo (ler o leitura.json inteiro, fazer os links de cada capítulo) levava um décimo de segundo a cada vez.
+    É refeita quando o leitura.json ou os sites mudam, e no máximo a cada minuto (capítulos baixados que sumiram)."""
+    try:
+        st = os.stat(_arq())
+        marca = (st.st_mtime_ns, st.st_size)
+    except OSError:
+        marca = None
+    chave = (marca, json.dumps(lc.get("sites"), sort_keys=True), lc.get("preferido") or "")
+    c = _lista_cache
+    if marca is None or c["chave"] != chave or time.time() - c["quando"] > 60:
+        d = _load()
+        ids = {s["id"] for s in d["series"]}
+        series = []
+        for s in d["series"]:
+            o = serie_out(s)
+            o.pop("description", None)  # a descrição só aparece no painel da série: vem por /api/leitura/sobre
+            series.append(o)
+        c.update(chave=chave, quando=time.time(), series=json.dumps(series, ensure_ascii=False, separators=(",", ":")),
+                 novidades=[n for n in reversed(d["novidades"]) if n["s"] in ids][:200],
+                 historico=[x for x in reversed(d["leituras"]) if x["s"] in ids][:300])
+    return c
+
+
+@bp.get("/api/leitura/sobre")
+def api_sobre():
+    s = achar(_load(), request.args.get("id") or "")
+    if not s:
+        abort(404)
+    return jsonify({"description": s.get("description") or ""})
+
+
 @bp.get("/api/leitura")
 def api_lista():
-    d = _load()
-    ids = {s["id"] for s in d["series"]}
     lc = cfg_leitura()[1]
+    pronta = _lista_pronta(lc)
     corpo = json.dumps({
-        "series": [serie_out(s) for s in d["series"]],
-        "novidades": [n for n in reversed(d["novidades"]) if n["s"] in ids][:200],
-        "historico": [x for x in reversed(d["leituras"]) if x["s"] in ids][:300],
+        "series": None,
+        "novidades": pronta["novidades"],
+        "historico": pronta["historico"],
         "verificando": _verificando,
         "extensao_vista": lc.get("extensao_vista"),
         "extensao_versao": lc.get("extensao_versao") or "",
         "extensao_pasta": versao_da_pasta(),
         "extensao_velha": extensao_velha(lc),
         "navegador": lc.get("navegador") or "",
-    }, ensure_ascii=False, separators=(",", ":"))
+    }, ensure_ascii=False, separators=(",", ":")).replace('"series":null', '"series":' + pronta["series"], 1)
     # A tela pergunta de tempos em tempos. Se nada mudou desde a última vez, a lista inteira (uns 2 MB) não vai de novo.
     marca = hashlib.md5(corpo.encode("utf-8")).hexdigest()[:16]
     if request.args.get("marca") == marca:

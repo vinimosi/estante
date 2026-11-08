@@ -105,7 +105,10 @@ def esperar(cond, seg=10):
 
 
 def serie(nome):
-    return next((s for s in c.get("/api/leitura").get_json()["series"] if s["name"] == nome), None)
+    s = next((s for s in c.get("/api/leitura").get_json()["series"] if s["name"] == nome), None)
+    if s:  # a descrição não vem na lista: é pedida quando a série é aberta
+        s["description"] = c.get("/api/leitura/sobre?id=" + s["id"]).get_json()["description"]
+    return s
 
 
 print("Entender links dos três sites")

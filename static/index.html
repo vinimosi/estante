@@ -780,8 +780,10 @@ function fmtWhen(ts) {
 }
 function fitCover(img) { if (img.naturalWidth / img.naturalHeight > 0.8) img.parentElement.classList.add('wide'); }
 function hue(s) { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+// nos cartões vai a capa reduzida (o servidor faz na primeira vez); o painel continua com a original
+const capaMini = u => /^\/covers\/[^/]+$/.test(u) ? u.replace('/covers/', '/covers/mini/') : u;
 function coverHTML(g) {
-  if (g.cover_url) return `<img class="bgb" src="${esc(g.cover_url)}" alt=""><img class="main" src="${esc(g.cover_url)}" alt="" loading="lazy" onload="fitCover(this)">`;
+  if (g.cover_url) { const u = esc(capaMini(g.cover_url)); return `<img class="bgb" src="${u}" alt="" loading="lazy"><img class="main" src="${u}" alt="" loading="lazy" onload="fitCover(this)">`; }
   const h = hue(g.name);
   return `<div class="ph" style="background:linear-gradient(160deg,hsl(${h} 45% 32%),hsl(${(h + 40) % 360} 50% 14%))">${esc(g.name)}</div>`;
 }
@@ -790,6 +792,7 @@ async function load() {
   if (S.estante === 'leitura') return loadLeitura();
   try {
     const res = await api('/api/games');
+    if (S.estante === 'leitura') return;  // trocou para a Leitura enquanto a lista dos jogos vinha: ela não serve mais
     const games = res.games;
     if (res.removed && res.removed.length) {
       const n = res.removed.length;
@@ -2243,7 +2246,7 @@ async function loadLeitura() {
       if (novas.length) toast(novas.length === 1 ? '“' + novas[0].name + '” entrou na sua Leitura.' : novas.length + ' séries novas entraram na sua Leitura.');
     }
     if (r.marca === S.lastJson) return;
-    S.lastJson = r.marca; S.games = r.series; L.carregou = true;
+    S.lastJson = r.marca; S.games = r.series; L.carregou = true; L.sobre = {};
     if (S.open && !byId(S.open)) closeDrawer();
     render();
     if (S.open) {
@@ -2554,9 +2557,18 @@ async function marcarCap(n) {
   catch (e) { toast(e.message, true); }
 }
 
+// a descrição não vem na lista (ela era um terço do tamanho): é pedida quando a série é aberta
+const sobreDe = s => s.description ?? (L.sobre || {})[s.id] ?? '';
+async function pedirSobre(s) {
+  L.sobre = L.sobre || {};
+  if (s.description != null || s.id in L.sobre) return;
+  try { L.sobre[s.id] = (await api('/api/leitura/sobre?id=' + encodeURIComponent(s.id))).description || ''; }
+  catch (e) { L.sobre[s.id] = null; }  // não veio: o painel fica sem e editar não apaga a que existe
+}
 function renderSerie() {
   const s = byId(S.open);
   if (!s) { closeDrawer(); return; }
+  if (s.description == null && !(s.id in (L.sobre || {}))) pedirSobre(s).then(() => { if (S.open === s.id && S.estante === 'leitura') renderSerie(); });
   const p = s.proximo_cap || {};
   const pills = [];
   if (s.status) pills.push(`<span class="pill st-${esc({'Em andamento': 'Em', 'Completa': 'Completo', 'Em hiato': 'Pausado', 'Cancelada': 'Abandonado'}[s.status] || '')}">${esc(s.status)}</span>`);
@@ -2589,7 +2601,7 @@ function renderSerie() {
         <div class="stat"><b>${s.disp_txt ? 'Cap. ' + esc(capTxt(s.disp_txt)) : '?'}</b><small>Último que saiu</small></div>
         <div class="stat"><b>${fmtWhen(s.ultima_leitura)}</b><small>Última leitura</small></div>
       </div></div>
-    ${s.description ? `<div class="sec"><h3>Sobre</h3><div class="desc">${esc(s.description)}</div></div>` : ''}
+    ${sobreDe(s) ? `<div class="sec"><h3>Sobre</h3><div class="desc">${esc(sobreDe(s))}</div></div>` : ''}
     ${(s.genres || []).length ? `<div class="sec"><h3>Gêneros</h3><div class="genres">${s.genres.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>` : ''}
     <div class="sec"><h3>Capítulos</h3>${capitulosHTML(s)}</div>
     ${s.local ? `<div class="sec"><h3>No seu PC</h3><div class="path">${esc(s.local.pasta)}</div><p class="hint">${s.local.caps.length} ${s.local.caps.length === 1 ? 'capítulo' : 'capítulos'} nessa pasta.</p></div>` : `<div class="sec"><h3>Onde você lê</h3>
@@ -2687,22 +2699,24 @@ async function capaSerie(id, input) {
   try { await api(`/api/leitura/${id}/capa`, {method: 'POST', body: fd}); S.lastJson = ''; await load(); toast('Capa trocada!'); }
   catch (e) { toast(e.message, true); }
 }
-function editarSerie(id) {
+async function editarSerie(id) {
   const s = byId(id);
+  await pedirSobre(s);
   const sts = ['', 'Em andamento', 'Completa', 'Em hiato', 'Cancelada'];
   openModal(head('Editar série') + `<div class="body">
     <label class="f"><span>Nome</span><input class="inp" id="eName" value="${esc(s.name)}"></label>
     <label class="f"><span>Lido até o capítulo</span><input class="inp" id="eLido" value="${esc(s.lido_txt ? capTxt(s.lido_txt) : '')}" inputmode="decimal" style="width:160px" placeholder="Ex.: 108"></label>
     <label class="f"><span>Status da série</span><select class="inp" id="eSt" style="width:220px">${sts.map(x => `<option value="${x}" ${x === (s.status || '') ? 'selected' : ''}>${x || '—'}</option>`).join('')}</select></label>
     <label class="f"><span>Autor</span><input class="inp" id="eAut" value="${esc(s.autor || '')}"></label>
-    <label class="f"><span>Sobre</span><textarea class="inp" id="eDesc">${esc(s.description || '')}</textarea></label>
+    <label class="f"><span>Sobre</span><textarea class="inp" id="eDesc">${esc(sobreDe(s))}</textarea></label>
   </div><footer><button class="btn danger" style="margin-right:auto" onclick="tirarSerie('${id}')">Tirar da estante</button>
     <button class="btn" onclick="closeModal()">Cancelar</button><button class="btn primary" id="eOk">Salvar</button></footer>`);
   $('eOk').onclick = async () => {
     const lido = $('eLido').value.trim().replace(',', '.');
     if (lido && isNaN(parseFloat(lido))) { toast('Use só o número do capítulo, como 108 ou 10,5.', true); return; }
     try {
-      await patch(id, {name: $('eName').value.trim() || s.name, ultimo_lido: lido ? parseFloat(lido) : null, status: $('eSt').value, autor: $('eAut').value.trim(), description: $('eDesc').value.trim()});
+      await patch(id, {name: $('eName').value.trim() || s.name, ultimo_lido: lido ? parseFloat(lido) : null, status: $('eSt').value, autor: $('eAut').value.trim(),
+                  description: s.description == null && L.sobre[id] === null ? undefined : $('eDesc').value.trim()});
       closeModal(); S.lastJson = ''; await load(); toast('Salvo!');
     } catch (e) { toast(e.message, true); }
   };

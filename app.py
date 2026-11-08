@@ -1169,6 +1169,10 @@ def vigiar_pastas(intervalo=300):
                 wand.vigiar_passo(get_lib()["games"])
             except Exception as e:
                 print("[wand]", e)
+            try:
+                limpar_minis()
+            except Exception as e:
+                print("[capas]", e)
             time.sleep(intervalo)
     threading.Thread(target=loop, daemon=True).start()
 
@@ -1576,6 +1580,44 @@ def game_out(g):
 @app.get("/")
 def index():
     return send_from_directory(BASE / "static", "index.html")
+
+
+MINI = COVERS / "mini"   # cópias pequenas das capas, só para os cartões (a original fica para o painel)
+MINI_LARGURA = 340       # o dobro do cartão, para continuar nítida em tela de alta resolução
+
+
+@app.get("/covers/mini/<fname>")
+def covers_mini(fname):
+    """A capa reduzida, feita na primeira vez que é pedida. Algumas capas têm 700 KB e 600 pixels para aparecer
+    num cartão de 170; com mais de mil séries, a tela carregava mais de 100 MB."""
+    orig = COVERS / fname
+    if "/" in fname or "\\" in fname or fname.startswith(".") or not orig.is_file():
+        abort(404)
+    mini = MINI / (fname + ".webp")
+    if not mini.exists():
+        try:
+            from PIL import Image
+            with Image.open(orig) as im:
+                if im.width <= MINI_LARGURA * 1.1:
+                    return send_from_directory(COVERS, fname, max_age=31536000)
+                im = im.convert("RGBA" if im.mode in ("RGBA", "LA", "P") else "RGB")
+                im.thumbnail((MINI_LARGURA, MINI_LARGURA * 4))
+                MINI.mkdir(exist_ok=True)
+                tmp = mini.with_name(f"{mini.name}.{threading.get_ident()}.tmp")
+                im.save(tmp, "WEBP", quality=82)
+                os.replace(tmp, mini)
+        except Exception as e:  # imagem que o Pillow não entende: vai a original
+            print(f"[capas] não consegui reduzir {fname}: {e}")
+            return send_from_directory(COVERS, fname, max_age=31536000)
+    return send_from_directory(MINI, mini.name, max_age=31536000, mimetype="image/webp")
+
+
+def limpar_minis():
+    """Tira as capas pequenas cuja original já foi apagada (capa trocada, jogo ou série que saiu)."""
+    if MINI.is_dir():
+        for p in MINI.glob("*.webp"):
+            if not (COVERS / p.name[:-5]).exists():
+                apagar_arquivo(p)
 
 
 @app.get("/covers/<path:fname>")
